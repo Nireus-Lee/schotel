@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath*:config.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="ctripOpenApiService" class="cn.buk.api.service.CtripOpenApiServiceImpl">
+        <property name="cityDao" ref="cityDao" />
+        <property name="hotelDao" ref="hotelDao" />
+        <property name="intervalCacheChange" value="120" />
+        <property name="allianceId" value="${ctrip.alliance.id}" />
+        <property name="sid" value="${ctrip.sid}" />
+        <property name="secretKey" value="${ctrip.secret.key}" />
+    </bean>
+
+    <bean id="hotelService" class="cn.buk.hotel.service.HotelServiceImpl">
+        <property name="hotelDao" ref="hotelDao" />
+        <property name="cityDao" ref="cityDao" />
+    </bean>
+
+    <!-- dao -->
+    <bean id="cityDao" class="cn.buk.hotel.dao.CityDaoImpl" />
+    <bean id="hotelDao" class="cn.buk.hotel.dao.HotelDaoImpl" />
+
+
+    <!-- task schedule-->
+    <bean id="ratePlanTask" class="cn.buk.qms.task.RatePlanTask">
+        <property name="ctripOpenApiService" ref="ctripOpenApiService" />
+    </bean>
+
+    <bean id="ratePlanJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">
+            <ref bean="ratePlanTask" />
+        </property>
+        <property name="targetMethod">
+            <value>refreshRatePlan</value>
+        </property>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="cacheChangeJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">
+            <ref bean="ratePlanTask" />
+        </property>
+        <property name="targetMethod">
+            <value>refreshHotelCacheChange</value>
+        </property>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <!-- 配置触发器 -->
+    <bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="ratePlanJob" />
+        </property>
+        <property name="cronExpression">
+            <value>${task.cron.expression}</value>
+        </property>
+    </bean>
+    <bean id="cacheChangeTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="cacheChangeJob" />
+        </property>
+        <property name="cronExpression">
+            <value>${cache.change.task.cron.expression}</value>
+        </property>
+    </bean>
+    <bean id="startQuartz" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <!-- 添加触发器 -->
+        <property name="triggers">
+            <list>
+                <ref bean="cronTrigger" />
+                <ref bean="cacheChangeTrigger" />
+            </list>
+        </property>
+    </bean>
+
+</beans>
+
+
+
+
+
+
+
+
+

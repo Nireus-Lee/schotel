@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC 
+	"-//Apache Software Foundation//DTD Struts Configuration 2.1//EN"
+	"http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="openapi-import" namespace="/openapi" extends="json-default">
+
+		<action name="importCountryInfo" class="cn.buk.api.action.CtripOpenApiAction" method="importCountryInfo">
+			<result type="plainText"></result>
+		</action>
+
+		<action name="importProvinceInfo" class="cn.buk.api.action.CtripOpenApiAction" method="importProvinceInfo">
+			<result type="plainText"></result>
+		</action>
+
+		<action name="importCityInfo" class="cn.buk.api.action.CtripOpenApiAction" method="importCityInfo">
+			<result type="plainText"></result>
+		</action>
+
+		<action name="importDistrictInfo" class="cn.buk.api.action.CtripOpenApiAction" method="importDistrictInfo">
+			<result type="plainText"></result>
+		</action>
+		<action name="importZoneInfo" class="cn.buk.api.action.CtripOpenApiAction" method="importZoneInfo">
+			<result type="plainText"></result>
+		</action>
+
+		<action name="importHotelSearchRS" class="cn.buk.api.action.CtripHotelAction" method="importHotelSearchRS">
+			<result type="plainText"></result>
+		</action>
+		<action name="importHotelDetailResponse" class="cn.buk.api.action.CtripHotelAction" method="importHotelDetailResponse">
+			<result type="plainText"></result>
+		</action>
+		<action name="importHotelRatePlanResponse" class="cn.buk.api.action.CtripHotelAction" method="importHotelRatePlanResponse">
+			<result type="plainText"></result>
+		</action>
+		<action name="importHotelCacheChangeResponse" class="cn.buk.api.action.CtripHotelAction" method="importHotelCacheChangeResponse">
+			<result type="plainText"></result>
+		</action>
+
+
+	</package>
+</struts>

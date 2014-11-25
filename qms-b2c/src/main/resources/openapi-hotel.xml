@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC 
+	"-//Apache Software Foundation//DTD Struts Configuration 2.1//EN"
+	"http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="openapi-hotel" extends="json-default">
+
+        <action name="openApiSearchHotel" class="cn.buk.api.action.CtripHotelAction" method="searchHotel">
+            <result type="plainText"></result>
+        </action>
+
+        <action name="openApiSearchHotelDetail" class="cn.buk.api.action.CtripHotelAction" method="searchHotelDetail">
+            <result type="plainText"></result>
+        </action>
+
+        <action name="openApiSearchHotelRatePlan" class="cn.buk.api.action.CtripHotelAction" method="searchHotelRatePlan">
+            <result type="plainText"></result>
+        </action>
+
+
+        <action name="openApiSearchHotelCacheChange" class="cn.buk.api.action.CtripHotelAction" method="searchHotelCacheChange">
+            <result type="plainText"></result>
+        </action>
+
+
+        <action name="openApiRefreshAllHotelBasicInfo" class="cn.buk.api.action.CtripHotelAction" method="refreshAllHotelBasicInfo">
+            <result type="plainText"></result>
+        </action>
+        <action name="openApiRefreshAllHotelDetail" class="cn.buk.api.action.CtripHotelAction" method="refreshAllHotelDetail">
+            <result type="plainText"></result>
+        </action>
+        <action name="openApiRefreshAllRatePlan" class="cn.buk.api.action.CtripHotelAction" method="refreshAllRatePlan">
+            <result type="plainText"></result>
+        </action>
+
+
+    </package>
+</struts>
