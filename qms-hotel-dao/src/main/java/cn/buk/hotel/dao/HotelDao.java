@@ -13,8 +13,6 @@ import java.util.List;
 
 public interface HotelDao {
 
-    public void flush();
-
 	public int createHotelInfo(HotelInfo hotelInfo);
     public void clearHotelInfoFromCache(HotelInfo hotelInfo);
 

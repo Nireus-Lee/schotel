@@ -29,10 +29,6 @@ public class HotelDaoImpl implements HotelDao {
         return em;
     }
 
-    @Override
-    public void flush() {
-        getEm().flush();
-    }
 
     @Override
     public int createHotelInfo(HotelInfo hotelInfo) {
