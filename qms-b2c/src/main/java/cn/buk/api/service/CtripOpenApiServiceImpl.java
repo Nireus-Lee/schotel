@@ -1314,7 +1314,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 int spanDays = DateUtil.getPastDays(cacheHotel.getCacheTime());
                 hotelDao.clearCacheHotelFromCache(cacheHotel);
                 if (spanDays < 7) {
-                    System.out.println(hotelCode + "\'s is already updated lately.");
+                    logger.info(hotelCode + "\'s is already updated lately.");
                     continue;
                 }
             }

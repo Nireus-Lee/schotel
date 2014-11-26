@@ -88,8 +88,8 @@ public class HotelDaoImpl implements HotelDao {
         } catch (Exception ex) {
             if (getEm().getTransaction().isActive()) getEm().getTransaction().rollback();
             retCode = -1;
-            logger.info("updateHotelInfo: (HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName() + ")");
-            ex.printStackTrace();
+            logger.error("updateHotelInfo failed: (HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName() + ")");
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
