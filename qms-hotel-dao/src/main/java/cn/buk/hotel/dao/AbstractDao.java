@@ -12,7 +12,7 @@ public abstract class AbstractDao {
 
 	protected EntityManager entityManager;
 	
-	public EntityManager getEM() {
+	public EntityManager getEm() {
 		if (entityManager == null) {
 			entityManager = EntityUtil.getEntityManagerFactory().createEntityManager();
 		}
@@ -20,7 +20,11 @@ public abstract class AbstractDao {
 		return entityManager;
 	}
 
-	public void setEM(EntityManager entityManager) {
+	public EntityManager createEntityManager() {
+		return EntityUtil.getEntityManagerFactory().createEntityManager();
+	}
+
+	public void setEm(EntityManager entityManager) {
 		this.entityManager = entityManager;
 	}	
 }

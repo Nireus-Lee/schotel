@@ -7,6 +7,7 @@ package cn.buk.hotel.dao;
 import cn.buk.hotel.entity.City;
 import org.apache.log4j.Logger;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 
 
@@ -22,22 +23,25 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
     @Override
     public int create(City city) {
         int retStatus = 0;
+        EntityManager em = createEntityManager();
         try {
-            getEM().getTransaction().begin();
-            getEM().persist(city);
-            getEM().getTransaction().commit();
+            em.getTransaction().begin();
+            em.persist(city);
+            em.getTransaction().commit();
             retStatus = 1;
         } catch (Exception ex) {
-            if (getEM().getTransaction().isActive()) getEM().getTransaction().rollback();
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retStatus = -1;
             ex.printStackTrace();
+        } finally {
+            em.close();
         }
         return retStatus;
     }
 
     @Override
     public City getCityByOpenApiId(int openApiId) {
-        List<City> cities = getEM().createQuery("select o from City o where o.openApiId = :openApiId")
+        List<City> cities = getEm().createQuery("select o from City o where o.openApiId = :openApiId")
                 .setParameter("openApiId", openApiId)
                 .getResultList();
         if (cities == null || cities.size() == 0) return null;
@@ -47,7 +51,7 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
 
     @Override
     public City getCityByCode(String cityCode) {
-        List<City> cities = getEM().createQuery("select o from City o where o.cityCode = :cityCode")
+        List<City> cities = getEm().createQuery("select o from City o where o.cityCode = :cityCode")
                 .setParameter("cityCode", cityCode)
                 .getResultList();
         if (cities == null || cities.size() == 0) return null;
@@ -58,7 +62,7 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
 
     @Override
     public List<City> getAllCity() {
-        List<City> cities = getEM().createQuery("select o from City o order by o.openApiId")
+        List<City> cities = getEm().createQuery("select o from City o order by o.openApiId")
                 .getResultList();
         return cities;
     }
