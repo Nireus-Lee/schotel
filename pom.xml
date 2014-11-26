@@ -17,10 +17,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <springframework.version>4.0.5.RELEASE</springframework.version>
+        <springframework.version>4.1.2.RELEASE</springframework.version>
         <struts2.version>2.3.16.3</struts2.version>
         <junit.version>4.11</junit.version>
-        <hibernate.version>3.6.10.Final</hibernate.version>
+        <hibernate.version>4.3.7.Final</hibernate.version>
         <quartz.version>2.2.1</quartz.version>
 
         <ctrip.alliance.id></ctrip.alliance.id>
