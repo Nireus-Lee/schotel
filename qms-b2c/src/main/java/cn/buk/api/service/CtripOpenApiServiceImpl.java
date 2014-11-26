@@ -1287,6 +1287,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 //break;
             } else {
                 //出错首先暂时退出
+                logger.warn("refreshAllHotelBasicInfo：exit loop for (" + rs + ").");
                 break;
             }
         }
@@ -1330,6 +1331,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 hotelCodes.clear();
             } else {
                 //出错首先暂时退出
+                logger.warn("refreshAllHotelDetail：exit loop for (" + rs + ").");
                 break;
             }
         }
