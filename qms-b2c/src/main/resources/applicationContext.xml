@@ -55,6 +55,16 @@
         </property>
         <property name="concurrent" value="false"/>
     </bean>
+    <bean id="hotelInfoJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">
+            <ref bean="ratePlanTask" />
+        </property>
+        <property name="targetMethod">
+            <value>refreshHotelInfo</value>
+        </property>
+        <property name="concurrent" value="false"/>
+    </bean>
+
     <!-- 配置触发器 -->
     <bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
@@ -72,12 +82,22 @@
             <value>${cache.change.task.cron.expression}</value>
         </property>
     </bean>
+    <bean id="hotelInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="hotelInfoJob" />
+        </property>
+        <property name="cronExpression">
+            <value>${task.hotel.info.cron}</value>
+        </property>
+    </bean>
+
     <bean id="startQuartz" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <!-- 添加触发器 -->
         <property name="triggers">
             <list>
                 <ref bean="cronTrigger" />
                 <ref bean="cacheChangeTrigger" />
+                <ref bean="hotelInfoTrigger" />
             </list>
         </property>
     </bean>

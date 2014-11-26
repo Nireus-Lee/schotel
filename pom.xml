@@ -51,8 +51,9 @@
                 <proxy.host>172.168.1.21</proxy.host>
                 <proxy.port>3128</proxy.port>
 
+                <task.hotel.info.cron>0 0/5 * * * ?</task.hotel.info.cron>
                 <task.cron.expression>0 0 0 * * ?</task.cron.expression>
-                <cache.change.task.cron.expression>0 0/5 * * * ?</cache.change.task.cron.expression>
+                <cache.change.task.cron.expression>0 0 0 * * ?</cache.change.task.cron.expression>
             </properties>
 
         </profile>
@@ -61,11 +62,11 @@
             <properties>
                 <struts.devMode>false</struts.devMode>
 
-                <log4j.file.qms>e:\\log\\qms.log</log4j.file.qms>
-                <log4j.file.payment>e:\\log\\qms.payment.log</log4j.file.payment>
-                <log4j.file.performance>e:\\log\\qms.performance.log</log4j.file.performance>
-                <log4j.file.taskfile>e:\\log\\qms.task.log</log4j.file.taskfile>
-                <log4j.file.openapi>e:\\log\\qms.openapi.log</log4j.file.openapi>
+                <log4j.file.qms>d:\\log\\qms.log</log4j.file.qms>
+                <log4j.file.payment>d:\\log\\qms.payment.log</log4j.file.payment>
+                <log4j.file.performance>d:\\log\\qms.performance.log</log4j.file.performance>
+                <log4j.file.taskfile>d:\\log\\qms.task.log</log4j.file.taskfile>
+                <log4j.file.openapi>d:\\log\\qms.openapi.log</log4j.file.openapi>
 
                 <hibernate.hbm2ddl.auto>none</hibernate.hbm2ddl.auto>
                 <hibernate.show_sql>false</hibernate.show_sql>
@@ -77,6 +78,7 @@
                 <proxy.host>172.17.14.145</proxy.host>
                 <proxy.port>3128</proxy.port>
 
+                <task.hotel.info.cron>0 0 0/2 * * ?</task.hotel.info.cron>
                 <task.cron.expression>0 0 1 * * ?</task.cron.expression>
                 <cache.change.task.cron.expression>0 0 0/2 * * ?</cache.change.task.cron.expression>
 

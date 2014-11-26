@@ -1260,7 +1260,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
      */
     @Override
     public String refreshAllHotelBasicInfo() {
-        String rs = "HAHA";
+        String rs = "";
 
         List<City> cities = cityDao.getAllCity();
         for(City city: cities) {

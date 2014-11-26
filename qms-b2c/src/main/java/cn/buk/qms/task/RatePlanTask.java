@@ -29,6 +29,13 @@ public class RatePlanTask {
         logger.info("[refreshHotelCacheChange] end.");
     }
 
+    public void refreshHotelInfo() {
+        logger.info("[refreshHotelInfo] begin");
+        ctripOpenApiService.refreshAllHotelBasicInfo();
+        ctripOpenApiService.refreshAllHotelDetail();
+        logger.info("[refreshHotelInfo] end.");
+    }
+
     public CtripOpenApiService getCtripOpenApiService() {
         return ctripOpenApiService;
     }
