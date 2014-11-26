@@ -973,7 +973,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         try {
             rs = processHotelDetailResponse(document);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error(ex.getMessage());
             logger.info(response);
             return "ER#processHotelDetailResponse";
         }
