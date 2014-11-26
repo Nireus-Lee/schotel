@@ -19,12 +19,14 @@ public class ImageItem {
     @XStreamAsAttribute
     private String category;
 
-
     @XStreamAlias("ImageFormat")
     private ImageFormat imageFormat;
 
     @XStreamAlias("Description")
     private ImageDescription imageDescription;
+
+    @XStreamAlias("TPA_Extensions")
+    private TpaExtensions tpaExtensions;
 
     public ImageFormat getImageFormat() {
         return imageFormat;
@@ -48,5 +50,13 @@ public class ImageItem {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public TpaExtensions getTpaExtensions() {
+        return tpaExtensions;
+    }
+
+    public void setTpaExtensions(TpaExtensions tpaExtensions) {
+        this.tpaExtensions = tpaExtensions;
     }
 }

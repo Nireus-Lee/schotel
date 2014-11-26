@@ -15,6 +15,12 @@ import java.util.List;
  */
 public class TpaExtensions {
 
+    @XStreamAlias("InvBlockCode")
+    private String invBlockCode;
+
+    @XStreamAlias("Roomquantity")
+    private Integer roomQuantity;
+
     @XStreamAlias("Zone")
     private List<ZoneType> zoneTypes;
 
@@ -46,5 +52,21 @@ public class TpaExtensions {
 
     public void setCityImportantMessageTypes(List<CityImportantMessageType> cityImportantMessageTypes) {
         this.cityImportantMessageTypes = cityImportantMessageTypes;
+    }
+
+    public String getInvBlockCode() {
+        return invBlockCode;
+    }
+
+    public void setInvBlockCode(String invBlockCode) {
+        this.invBlockCode = invBlockCode;
+    }
+
+    public Integer getRoomQuantity() {
+        return roomQuantity;
+    }
+
+    public void setRoomQuantity(Integer roomQuantity) {
+        this.roomQuantity = roomQuantity;
     }
 }
