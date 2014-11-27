@@ -14,8 +14,13 @@ public abstract class AbstractDao {
 	
 	public EntityManager getEm() {
 		if (entityManager != null) {
-			if (entityManager.isOpen() == false) {
+			try {
+				if (entityManager.isOpen() == false) {
+					entityManager = null;
+				}
+			} catch (Exception e) {
 				entityManager = null;
+				e.printStackTrace();
 			}
 		}
 
