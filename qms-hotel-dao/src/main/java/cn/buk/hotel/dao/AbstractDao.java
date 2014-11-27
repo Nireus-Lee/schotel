@@ -13,6 +13,13 @@ public abstract class AbstractDao {
 	protected EntityManager entityManager;
 	
 	public EntityManager getEm() {
+		if (entityManager != null) {
+			if (entityManager.isOpen() == false) {
+				entityManager = null;
+			}
+		}
+
+
 		if (entityManager == null) {
 			entityManager = EntityUtil.getEntityManagerFactory().createEntityManager();
 		}
