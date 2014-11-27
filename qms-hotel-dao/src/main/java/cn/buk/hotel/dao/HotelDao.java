@@ -14,7 +14,6 @@ import java.util.List;
 public interface HotelDao {
 
 	public int createHotelInfo(HotelInfo hotelInfo);
-    public void clearHotelInfoFromCache(HotelInfo hotelInfo);
 
     public HotelInfo getHotelInfoByHotelCode(String hotelCode);
 
@@ -26,7 +25,6 @@ public interface HotelDao {
 
 
     public int createHotelRatePlan(HotelRatePlan hotelRatePlan);
-    public void clearHotelRatePlanFromCache(HotelRatePlan hotelRatePlan);
 
 
     public CacheCity getCacheCity(int cityId);
@@ -36,11 +34,9 @@ public interface HotelDao {
     public CacheHotel getCacheHotel(String hotelCode);
     public int createCacheHotel(CacheHotel cacheHotel);
     public int updateCacheHotel(CacheHotel cacheHotel);
-    public void clearCacheHotelFromCache(CacheHotel cacheHotel);
 
     public CacheRatePlan getCacheRatePlan(String hotelCode, int periodId);
 
-    public void clearCacheRatePlanFromCache(CacheRatePlan cacheRatePlan);
 
     public int createCacheRatePlan(CacheRatePlan cacheRatePlan);
 

@@ -49,15 +49,6 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         return retCode;
     }
 
-    /**
-     * 将指定对象从缓存中移除
-     * @param hotelInfo
-     */
-    @Override
-    public void clearHotelInfoFromCache(HotelInfo hotelInfo) {
-        getEm().detach(hotelInfo);
-    }
-
     @Override
     public HotelInfo getHotelInfoByHotelCode(String hotelCode) {
         List<HotelInfo> hotelInfos = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
@@ -138,11 +129,6 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
             em.close();
         }
         return retCode;
-    }
-
-    @Override
-    public void clearHotelRatePlanFromCache(HotelRatePlan hotelRatePlan) {
-        getEm().detach(hotelRatePlan);
     }
 
     @Override
@@ -240,11 +226,6 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     }
 
     @Override
-    public void clearCacheHotelFromCache(CacheHotel cacheHotel) {
-        getEm().detach(cacheHotel);
-    }
-
-    @Override
     public CacheRatePlan getCacheRatePlan(String hotelCode, int periodId) {
         List<CacheRatePlan> cacheRatePlans = getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
                 .setParameter("hotelCode", hotelCode)
@@ -252,11 +233,6 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
                 .getResultList();
 
         return cacheRatePlans.size() > 0 ? cacheRatePlans.get(0) : null;
-    }
-
-    @Override
-    public void clearCacheRatePlanFromCache(CacheRatePlan cacheRatePlan) {
-        getEm().detach(cacheRatePlan);
     }
 
     @Override
