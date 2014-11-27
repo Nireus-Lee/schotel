@@ -8,6 +8,7 @@ import cn.buk.hotel.entity.City;
 import org.apache.log4j.Logger;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import java.util.List;
 
 
@@ -62,8 +63,19 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
 
     @Override
     public List<City> getAllCity() {
-        List<City> cities = getEm().createQuery("select o from City o order by o.openApiId")
-                .getResultList();
+        List<City> cities;
+        try {
+            cities = getEm().createQuery("select o from City o order by o.openApiId")
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+           this.entityManager.close();
+            this.entityManager = createEntityManager();
+
+            logger.info("try again");
+            cities = getEm().createQuery("select o from City o order by o.openApiId")
+                    .getResultList();
+        }
         return cities;
     }
 }
