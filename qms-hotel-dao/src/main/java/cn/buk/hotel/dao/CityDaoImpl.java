@@ -7,6 +7,7 @@ package cn.buk.hotel.dao;
 import cn.buk.hotel.entity.City;
 import org.apache.log4j.Logger;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import java.util.List;
 
@@ -41,19 +42,30 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
 
     @Override
     public City getCityByOpenApiId(int openApiId) {
-        List<City> cities = getEm().createQuery("select o from City o where o.openApiId = :openApiId")
-                .setParameter("openApiId", openApiId)
-                .getResultList();
+        List<City> cities = null;
+        EntityManager em = createEntityManager();
+        try {
+            cities = em.createQuery("select o from City o where o.openApiId = :openApiId")
+                    .setParameter("openApiId", openApiId)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
         if (cities == null || cities.size() == 0) return null;
-
         return cities.get(0);
     }
 
     @Override
     public City getCityByCode(String cityCode) {
-        List<City> cities = getEm().createQuery("select o from City o where o.cityCode = :cityCode")
-                .setParameter("cityCode", cityCode)
-                .getResultList();
+        List<City> cities = null;
+        EntityManager em = createEntityManager();
+        try {
+            cities = em.createQuery("select o from City o where o.cityCode = :cityCode")
+                    .setParameter("cityCode", cityCode)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
         if (cities == null || cities.size() == 0) return null;
 
         return cities.get(0);
@@ -62,8 +74,14 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
 
     @Override
     public List<City> getAllCity() {
-        List<City> cities = getEm().createQuery("select o from City o order by o.openApiId")
-                .getResultList();
+        List<City> cities = null;
+        EntityManager em = createEntityManager();
+        try {
+            cities = em.createQuery("select o from City o order by o.openApiId")
+                    .getResultList();
+        } finally {
+            em.close();
+        }
         return cities;
     }
 }

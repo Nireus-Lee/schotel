@@ -401,14 +401,12 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
             if ( retCode == 1) {
                 saveCount++;
-                hotelDao.clearHotelInfoFromCache(hotelInfo1);
             }
             else if (retCode == 2)
                 logger.info("HotelCode: " + hotelInfo1.getHotelCode() + ", HotelName: " + hotelInfo1.getHotelName() + " is existed.");
 
             count++;
             if (count % 100 == 0) {
-                //logger.info("dto -> entity: " + spanMilliSeconds1 + "ms, entity -> db: " + spanMilliSeconds2 + "ms.");
                 logger.info("Progress: " + count + " / " + total);
             }
         }
@@ -628,8 +626,6 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 int spanTime3 = DateUtil.getPastTime(date0);
                 logger.info("HotelCode[" + hotelCode + "]: 保存耗时　" + spanTime3 + "ms, retCode=" + retCode);
                 span4 = DateUtil.getPastTime(baseTime);
-                hotelDao.clearHotelInfoFromCache(hotelInfo1);
-                span5 = DateUtil.getPastTime(baseTime);
                 if (retCode == 1) {
                     rs = "OK#Save OK";
                     //记录cache
@@ -648,8 +644,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                         hotelDao.updateCacheHotel(cacheHotel);
                         span7 = DateUtil.getPastTime(baseTime);
                     }
-                    hotelDao.clearCacheHotelFromCache(cacheHotel);
-                    span8 = DateUtil.getPastTime(baseTime);
+
                 }  else {
                     logger.info(xml);
                     rs = "ER#Save Status is " + retCode + " for hotelCode[" + hotelCode + "]";
@@ -737,11 +732,8 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                         hotelRatePlan.setHotelInfo(hotelInfo1);
                         int retCode = hotelDao.createHotelRatePlan(hotelRatePlan);
                         if (retCode == 1) {
-                            //--logger.info("hotelCode: " + hotelCode + ", ratePlanCode: " + hotelRatePlan.getRatePlanCode() + ", " + retCode);
                             saveCount++;
                             rs = "OK#Save OK";
-                            hotelDao.clearHotelRatePlanFromCache(hotelRatePlan);
-                            hotelRatePlan = null;
                         } else if (retCode == 2) {
                             rs = "OK#already exist.";
                             hotelRatePlan = null;
@@ -762,8 +754,6 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             }
 
             int span2 = DateUtil.getPastTime(baseTime1);
-
-            hotelDao.clearHotelInfoFromCache(hotelInfo1);
             //记录cache
             CacheRatePlan cacheRatePlan = hotelDao.getCacheRatePlan(hotelCode, periodId);
             if (cacheRatePlan == null) {
@@ -776,8 +766,6 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 cacheRatePlan.setEndTime(DateUtil.getCurDateTime());
                 hotelDao.updateCacheRatePlan(cacheRatePlan);
             }
-            if (periodId == 4)
-                hotelDao.clearCacheRatePlanFromCache(cacheRatePlan);
 
             int span3 = DateUtil.getPastTime(baseTime1);
             logger.info(String.format("hotel code[%s]: span1=%dms, span2=%dms, span3=%dms", hotelCode, span1, span2, span3));
@@ -1312,7 +1300,6 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             if (cacheHotel != null) {
                 //判断上次更新到现在是否超过7天
                 int spanDays = DateUtil.getPastDays(cacheHotel.getCacheTime());
-                hotelDao.clearCacheHotelFromCache(cacheHotel);
                 if (spanDays < 7) {
                     logger.info(hotelCode + "\'s is already updated lately.");
                     continue;
@@ -1381,17 +1368,14 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             hotelInfo = hotelDao.getHotelInfoByHotelCode(hotelCode);
             if (hotelInfo == null || hotelInfo.getRatePlanStatus() == -1) {
                 logger.info(hotelCode + " skipped for rate plan status is -1.");
-                hotelDao.clearHotelInfoFromCache(hotelInfo);
                 continue;
-            } else {
-                hotelDao.clearHotelInfoFromCache(hotelInfo);
             }
 
             CacheRatePlan cacheRatePlan = hotelDao.getCacheRatePlan(hotelCode, 1);
             if (cacheRatePlan != null) {
                 //判断上次更新到现在是否超过7天
                 int spanDays = DateUtil.getPastDays(cacheRatePlan.getCacheTime());
-                hotelDao.clearCacheRatePlanFromCache(cacheRatePlan);
+
                 if (spanDays < 7) {
                     cachedCount++;
                     logger.info(hotelCode + " skipped for cached time is short.");
@@ -1403,7 +1387,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 cacheRatePlan.setPeriodId(1);
                 cacheRatePlan.setBeginTime(DateUtil.getCurDateTime());
                 if (hotelDao.createCacheRatePlan(cacheRatePlan) == 1) {
-                    hotelDao.clearCacheRatePlanFromCache(cacheRatePlan);
+
                 }
             }
 
