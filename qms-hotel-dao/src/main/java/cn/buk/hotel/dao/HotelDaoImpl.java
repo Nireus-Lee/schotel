@@ -11,6 +11,7 @@ import cn.buk.util.DateUtil;
 import org.apache.log4j.Logger;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -80,13 +81,33 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public List<HotelInfo> getAllHotelInfo() {
-        List<HotelInfo> hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
+        List<HotelInfo> hotelInfos;
+        try {
+            hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+            this.entityManager.close();
+            this.entityManager = createEntityManager();
+
+            logger.info("try again");
+            hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
+        }
         return  hotelInfos;
     }
 
     @Override
     public List<String> getAllHotelCodes() {
-        List<String> hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
+        List<String> hotelCodes;
+        try {
+            hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+            this.entityManager.close();
+            this.entityManager = createEntityManager();
+
+            logger.info("try again");
+            hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
+        }
         return  hotelCodes;
     }
 
