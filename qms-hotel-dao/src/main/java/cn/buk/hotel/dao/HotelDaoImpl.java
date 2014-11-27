@@ -51,15 +51,9 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public HotelInfo getHotelInfoByHotelCode(String hotelCode) {
-        List<HotelInfo> hotelInfos = null;
-        EntityManager em = createEntityManager();
-        try {
-            hotelInfos = em.createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
-                    .setParameter("hotelCode", hotelCode)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
+        List<HotelInfo> hotelInfos = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
+                .setParameter("hotelCode", hotelCode)
+                .getResultList();
         return hotelInfos.size() > 0 ? hotelInfos.get(0): null;
     }
 
@@ -86,41 +80,22 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public List<HotelInfo> getAllHotelInfo() {
-        List<HotelInfo> hotelInfos = null;
-        EntityManager em = createEntityManager();
-        try {
-            hotelInfos = em.createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
-        } finally {
-            em.close();
-        }
+        List<HotelInfo> hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
         return  hotelInfos;
     }
 
     @Override
     public List<String> getAllHotelCodes() {
-        List<String> hotelCodes = null;
-        EntityManager em = createEntityManager();
-        try {
-            hotelCodes = em.createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
-        } finally {
-            em.close();
-        }
-
+        List<String> hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
         return  hotelCodes;
     }
 
     @Override
     public List<String> getAllHotelCodesByCityId(int cityId) {
-        List<String> hotelCodes;
         Date baseTime = DateUtil.getCurDateTime();
-        EntityManager em = createEntityManager();
-        try {
-            hotelCodes = em.createQuery("select o.hotelCode from HotelInfo o where o.cityId = :cityId order by o.id")
-                    .setParameter("cityId", cityId)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
+        List<String> hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o where o.cityId = :cityId order by o.id")
+                .setParameter("cityId", cityId)
+                .getResultList();
         int span = DateUtil.getPastTime(baseTime);
         logger.info("get all hotel codes in city (" + cityId + ") elapsed: " + span + "ms.");
 
@@ -156,19 +131,12 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         return retCode;
     }
 
-
     @Override
     public CacheCity getCacheCity(int cityId) {
-        List<CacheCity> cacheCities;
-        EntityManager em = createEntityManager();
-        try {
-            cacheCities = em.createQuery("select o from CacheCity o where o.cityId = :cityId")
-                    .setParameter("cityId", cityId)
-                    .getResultList();
+        List<CacheCity> cacheCities = getEm().createQuery("select o from CacheCity o where o.cityId = :cityId")
+                .setParameter("cityId", cityId)
+                .getResultList();
 
-        } finally {
-            em.close();
-        }
         return cacheCities.size() > 0 ? cacheCities.get(0) : null;
     }
 
@@ -210,15 +178,9 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public CacheHotel getCacheHotel(String hotelCode) {
-        List<CacheHotel> cacheHotels;
-        EntityManager em = createEntityManager();
-        try {
-            cacheHotels = em.createQuery("select o from CacheHotel o where o.hotelCode = :hotelCode")
-                    .setParameter("hotelCode", hotelCode)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
+        List<CacheHotel> cacheHotels = getEm().createQuery("select o from CacheHotel o where o.hotelCode = :hotelCode")
+                .setParameter("hotelCode", hotelCode)
+                .getResultList();
 
         return cacheHotels.size() > 0 ? cacheHotels.get(0) : null;
     }
@@ -263,23 +225,15 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         return retCode;
     }
 
-
     @Override
     public CacheRatePlan getCacheRatePlan(String hotelCode, int periodId) {
-        List<CacheRatePlan> cacheRatePlans;
-        EntityManager em = createEntityManager();
-        try {
-             cacheRatePlans = em.createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
-                    .setParameter("hotelCode", hotelCode)
-                    .setParameter("periodId", periodId)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
+        List<CacheRatePlan> cacheRatePlans = getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
+                .setParameter("hotelCode", hotelCode)
+                .setParameter("periodId", periodId)
+                .getResultList();
 
         return cacheRatePlans.size() > 0 ? cacheRatePlans.get(0) : null;
     }
-
 
     @Override
     public int createCacheRatePlan(CacheRatePlan cacheRatePlan) {
@@ -322,10 +276,7 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public List<HotelInfo> searchAvailableHotel(HotelSearchCriteria sc) {
-        List<HotelInfo> hotelInfos;
-        EntityManager em = createEntityManager();
-        try {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaBuilder cb = getEm().getCriteriaBuilder();
 
         CriteriaQuery<HotelInfo> cq = cb.createQuery(HotelInfo.class);
         Root<HotelInfo> root = cq.from(HotelInfo.class);
@@ -381,7 +332,7 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
             hotelZone0.alias("hz");
         }
         cq0.select(cb.count(root0)).where(predicates.toArray(new Predicate[0]));
-        Long count = em.createQuery(cq0).getSingleResult();
+        Long count = getEm().createQuery(cq0).getSingleResult();
 
         sc.getPage().setRowCount(count.intValue());
 
@@ -389,41 +340,30 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int firstPosition = (sc.getPage().getPageNo()-1) * sc.getPage().getPageSize();
         cq.select(root).where(predicates.toArray(new Predicate[0]));
 
-        hotelInfos = em.createQuery(cq).
+        List<HotelInfo> hotelInfos = getEm().createQuery(cq).
                 setFirstResult(firstPosition).
                 setMaxResults(sc.getPage().getPageSize())
                 .getResultList();
-
-        } finally {
-            em.close();
-        }
-
 
         return  hotelInfos;
     }
 
     @Override
     public List<HotelRatePlan> searchAvailableHotelRatePlan(int hotelId, Date checkInDate, Date checkOutDate) {
-        List<HotelRatePlan> ratePlans;
-        EntityManager em = createEntityManager();
-        try {
-            ratePlans = em.createQuery("select o from HotelRatePlan o where o.hotelInfo.id = :hotelId")
-                    .setParameter("hotelId", hotelId)
+        List<HotelRatePlan> ratePlans = getEm().createQuery("select o from HotelRatePlan o where o.hotelInfo.id = :hotelId")
+                .setParameter("hotelId", hotelId)
+                .getResultList();
+        for(HotelRatePlan rp: ratePlans) {
+            List<HotelRatePlanRate> rates = getEm().createQuery("select o from HotelRatePlanRate o where o.startDate >= :startDate " +
+                    " and o.endDate <= :endDate " +
+                    " and o.hotelRatePlan.id = :id")
+                    .setParameter("id",rp.getId())
+                    .setParameter("startDate", checkInDate)
+                    .setParameter("endDate", checkOutDate)
                     .getResultList();
-            for(HotelRatePlan rp: ratePlans) {
-                List<HotelRatePlanRate> rates = em.createQuery("select o from HotelRatePlanRate o where o.startDate >= :startDate " +
-                        " and o.endDate <= :endDate " +
-                        " and o.hotelRatePlan.id = :id")
-                        .setParameter("id",rp.getId())
-                        .setParameter("startDate", checkInDate)
-                        .setParameter("endDate", checkOutDate)
-                        .getResultList();
 
-                rp.setHotelRatePlanRates(rates);
+            rp.setHotelRatePlanRates(rates);
 
-            }
-        } finally {
-            em.close();
         }
 
         return ratePlans;
@@ -431,28 +371,17 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public HotelGuestRoom getHotelRoomInfo(int hotelId, String roomTypeCode) {
-        List<HotelGuestRoom> rooms;
-        EntityManager em = createEntityManager();
-        try {
-            rooms = em.createQuery("select o from HotelGuestRoom o where o.hotelInfo.id = :hotelId and o.invBlockCode = :roomTypeCode")
-                    .setParameter("hotelId", hotelId)
-                    .setParameter("roomTypeCode", roomTypeCode)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
+        List<HotelGuestRoom> rooms = getEm().createQuery("select o from HotelGuestRoom o where o.hotelInfo.id = :hotelId and o.invBlockCode = :roomTypeCode")
+                .setParameter("hotelId", hotelId)
+                .setParameter("roomTypeCode", roomTypeCode)
+                .getResultList();
 
         return  rooms.size() > 0 ? rooms.get(0) : null;
     }
 
     @Override
     public void clearAllCache() {
-        EntityManager em = createEntityManager();
-        try {
-            em.clear();
-        } finally {
-            em.close();
-        }
+        getEm().clear();
     }
 
     @Override
@@ -495,30 +424,16 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public List<District> getDistrictByCityId(int cityId) {
-        List<District> districts;
-        EntityManager em = createEntityManager();
-        try {
-            districts = em.createQuery("select o from District o where o.cityId = :cityId")
-                    .setParameter("cityId", cityId)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
-        return districts;
+        return getEm().createQuery("select o from District o where o.cityId = :cityId")
+                .setParameter("cityId", cityId)
+                .getResultList();
     }
 
     @Override
     public List<Zone> getZoneByCityId(int cityId) {
-        List<Zone> zones;
-        EntityManager em = createEntityManager();
-        try {
-            zones = em.createQuery("select o from Zone o where o.cityId = :cityId")
-                    .setParameter("cityId", cityId)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
-        return zones;
+        return getEm().createQuery("select o from Zone o where o.cityId = :cityId")
+                .setParameter("cityId", cityId)
+                .getResultList();
     }
 
     @Override
