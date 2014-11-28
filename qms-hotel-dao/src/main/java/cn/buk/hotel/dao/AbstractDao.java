@@ -4,19 +4,15 @@
 */
 package cn.buk.hotel.dao;
 
-import cn.buk.hotel.util.EntityUtil;
-
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 public abstract class AbstractDao {
 
+	@PersistenceContext
 	protected EntityManager entityManager;
 	
 	public EntityManager getEm() {
-		if (entityManager == null) {
-			entityManager = EntityUtil.getEntityManagerFactory().createEntityManager();
-		}
-		
 		return entityManager;
 	}
 
@@ -26,7 +22,7 @@ public abstract class AbstractDao {
 	}
 
 	public EntityManager createEntityManager() {
-		return EntityUtil.getEntityManagerFactory().createEntityManager();
+		return entityManager;
 	}
 
 	public void setEm(EntityManager entityManager) {

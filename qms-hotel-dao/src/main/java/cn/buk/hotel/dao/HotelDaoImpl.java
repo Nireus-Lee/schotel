@@ -6,7 +6,6 @@ package cn.buk.hotel.dao;
 
 import cn.buk.hotel.entity.*;
 import cn.buk.hotel.sc.HotelSearchCriteria;
-import cn.buk.hotel.util.EntityUtil;
 import cn.buk.util.DateUtil;
 import org.apache.log4j.Logger;
 
