@@ -52,21 +52,28 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public HotelInfo getHotelInfoByHotelCode(String hotelCode) {
-        List<HotelInfo> hotelInfos;
+        List<HotelInfo> hotelInfos = new ArrayList<HotelInfo>();
 
-        try {
-            hotelInfos = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
-                    .setParameter("hotelCode", hotelCode)
-                    .getResultList();
-        } catch (PersistenceException e) {
-            logger.error(e.getMessage());
-            logger.info("try again in getHotelInfoByHotelCode.");
-            this.entityManager.close();
-            this.entityManager = createEntityManager();
-            hotelInfos = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
-                    .setParameter("hotelCode", hotelCode)
-                    .getResultList();
-        }
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                hotelInfos = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
+                        .setParameter("hotelCode", hotelCode)
+                        .getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
+
         return hotelInfos.size() > 0 ? hotelInfos.get(0): null;
     }
 
@@ -93,42 +100,82 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public List<HotelInfo> getAllHotelInfo() {
-        List<HotelInfo> hotelInfos;
-        try {
-            hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
-        } catch (PersistenceException e) {
-            logger.error(e.getMessage());
-            this.entityManager.close();
-            this.entityManager = createEntityManager();
+        List<HotelInfo> hotelInfos = new ArrayList<HotelInfo>();
 
-            logger.info("try again");
-            hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
-        }
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();;
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
+
         return  hotelInfos;
     }
 
     @Override
     public List<String> getAllHotelCodes() {
-        List<String> hotelCodes;
-        try {
-            hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
-        } catch (PersistenceException e) {
-            logger.error(e.getMessage());
-            this.entityManager.close();
-            this.entityManager = createEntityManager();
+        List<String> hotelCodes = new ArrayList<String>();
 
-            logger.info("try again");
-            hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
-        }
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                //body
+                hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
+
         return  hotelCodes;
     }
 
     @Override
     public List<String> getAllHotelCodesByCityId(int cityId) {
+
+        List<String> hotelCodes = new ArrayList<String>();
         Date baseTime = DateUtil.getCurDateTime();
-        List<String> hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o where o.cityId = :cityId order by o.id")
-                .setParameter("cityId", cityId)
-                .getResultList();
+
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                //body
+                hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o where o.cityId = :cityId order by o.id")
+                        .setParameter("cityId", cityId)
+                        .getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
+
         int span = DateUtil.getPastTime(baseTime);
         logger.info("get all hotel codes in city (" + cityId + ") elapsed: " + span + "ms.");
 
@@ -166,9 +213,28 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public CacheCity getCacheCity(int cityId) {
-        List<CacheCity> cacheCities = getEm().createQuery("select o from CacheCity o where o.cityId = :cityId")
-                .setParameter("cityId", cityId)
-                .getResultList();
+        List<CacheCity> cacheCities = new ArrayList<CacheCity>();
+
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                //body
+                cacheCities = getEm().createQuery("select o from CacheCity o where o.cityId = :cityId")
+                        .setParameter("cityId", cityId)
+                        .getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
 
         return cacheCities.size() > 0 ? cacheCities.get(0) : null;
     }
@@ -211,9 +277,28 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public CacheHotel getCacheHotel(String hotelCode) {
-        List<CacheHotel> cacheHotels = getEm().createQuery("select o from CacheHotel o where o.hotelCode = :hotelCode")
-                .setParameter("hotelCode", hotelCode)
-                .getResultList();
+        List<CacheHotel> cacheHotels = new ArrayList<CacheHotel>();
+
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                //body
+                cacheHotels = getEm().createQuery("select o from CacheHotel o where o.hotelCode = :hotelCode")
+                        .setParameter("hotelCode", hotelCode)
+                        .getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
 
         return cacheHotels.size() > 0 ? cacheHotels.get(0) : null;
     }
@@ -260,10 +345,28 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public CacheRatePlan getCacheRatePlan(String hotelCode, int periodId) {
-        List<CacheRatePlan> cacheRatePlans = getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
-                .setParameter("hotelCode", hotelCode)
-                .setParameter("periodId", periodId)
-                .getResultList();
+        List<CacheRatePlan> cacheRatePlans = new ArrayList<CacheRatePlan>();
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                //body
+                cacheRatePlans = getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
+                        .setParameter("hotelCode", hotelCode)
+                        .setParameter("periodId", periodId)
+                        .getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
 
         return cacheRatePlans.size() > 0 ? cacheRatePlans.get(0) : null;
     }
@@ -309,105 +412,165 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public List<HotelInfo> searchAvailableHotel(HotelSearchCriteria sc) {
-        CriteriaBuilder cb = getEm().getCriteriaBuilder();
 
-        CriteriaQuery<HotelInfo> cq = cb.createQuery(HotelInfo.class);
-        Root<HotelInfo> root = cq.from(HotelInfo.class);
-        root.alias("h");
+        List<HotelInfo> hotelInfos = null;
 
-        List<Predicate> predicates = new ArrayList<Predicate>();
+        boolean isRetry;
+        int retryTimes = 1;
 
-        Predicate predicate = cb.equal(root.get(HotelInfo_.cityId), sc.getCityId());
-        predicates.add(predicate);
+        do {
+            isRetry = false;
+            try {
+                //body
+                CriteriaBuilder cb = getEm().getCriteriaBuilder();
 
-        if (sc.getDistrictId() > 0) {
-            predicate = cb.equal(root.get(HotelInfo_.areaId), sc.getDistrictId());
-            predicates.add(predicate);
-        }
+                CriteriaQuery<HotelInfo> cq = cb.createQuery(HotelInfo.class);
+                Root<HotelInfo> root = cq.from(HotelInfo.class);
+                root.alias("h");
 
-        if (sc.getStar() != null && sc.getStar().length() > 0) {
-            Join<HotelInfo, HotelAward> hotelAward = root.join("hotelAwards", JoinType.LEFT);
-            hotelAward.alias("ha");
+                List<Predicate> predicates = new ArrayList<Predicate>();
 
-            predicates.add(cb.equal(hotelAward.get("provider"),"HotelStarRate"));
+                Predicate predicate = cb.equal(root.get(HotelInfo_.cityId), sc.getCityId());
+                predicates.add(predicate);
 
-            String[] stars = sc.getStar().split(",");
-            Predicate p0 = cb.disjunction();
-            for (String star:stars) {
-                if (star.length() == 0) continue;
-                int starLevel = Integer.parseInt(star);
-                if (starLevel == 2)
-                    p0 = cb.or(p0, cb.le(hotelAward.get(HotelAward_.rating), starLevel));
-                else
-                    p0 = cb.or(p0, cb.equal(hotelAward.get("rating"), starLevel));
+                if (sc.getDistrictId() > 0) {
+                    predicate = cb.equal(root.get(HotelInfo_.areaId), sc.getDistrictId());
+                    predicates.add(predicate);
+                }
+
+                if (sc.getStar() != null && sc.getStar().length() > 0) {
+                    Join<HotelInfo, HotelAward> hotelAward = root.join("hotelAwards", JoinType.LEFT);
+                    hotelAward.alias("ha");
+
+                    predicates.add(cb.equal(hotelAward.get("provider"),"HotelStarRate"));
+
+                    String[] stars = sc.getStar().split(",");
+                    Predicate p0 = cb.disjunction();
+                    for (String star:stars) {
+                        if (star.length() == 0) continue;
+                        int starLevel = Integer.parseInt(star);
+                        if (starLevel == 2)
+                            p0 = cb.or(p0, cb.le(hotelAward.get(HotelAward_.rating), starLevel));
+                        else
+                            p0 = cb.or(p0, cb.equal(hotelAward.get("rating"), starLevel));
+                    }
+                    predicates.add(p0);
+                }
+
+                if (sc.getZoneId() > 0) {
+                    Join<HotelInfo, HotelAddressZone> hotelZone = root.join(HotelInfo_.hotelAddressZones, JoinType.LEFT);
+                    hotelZone.alias("hz");
+
+                    predicate = cb.equal(hotelZone.get(HotelAddressZone_.zoneCode), sc.getZoneId());
+                    predicates.add(predicate);
+                }
+
+                // count items
+                CriteriaQuery<Long> cq0 = cb.createQuery(Long.class);
+                Root<HotelInfo> root0 = cq0.from(HotelInfo.class);
+                root0.alias("h");
+                if (sc.getStar() != null && sc.getStar().length() > 0 ) {
+                    Join<HotelInfo, HotelAward> hotelAward0 = root0.join("hotelAwards", JoinType.LEFT);
+                    hotelAward0.alias("ha");
+                }
+                if (sc.getZoneId() > 0) {
+                    Join<HotelInfo, HotelAddressZone> hotelZone0 = root0.join(HotelInfo_.hotelAddressZones, JoinType.LEFT);
+                    hotelZone0.alias("hz");
+                }
+                cq0.select(cb.count(root0)).where(predicates.toArray(new Predicate[0]));
+                Long count = getEm().createQuery(cq0).getSingleResult();
+
+                sc.getPage().setRowCount(count.intValue());
+
+
+                int firstPosition = (sc.getPage().getPageNo()-1) * sc.getPage().getPageSize();
+                cq.select(root).where(predicates.toArray(new Predicate[0]));
+
+                hotelInfos = getEm().createQuery(cq).
+                        setFirstResult(firstPosition).
+                        setMaxResults(sc.getPage().getPageSize())
+                        .getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
             }
-            predicates.add(p0);
-        }
-
-        if (sc.getZoneId() > 0) {
-          Join<HotelInfo, HotelAddressZone> hotelZone = root.join(HotelInfo_.hotelAddressZones, JoinType.LEFT);
-            hotelZone.alias("hz");
-
-            predicate = cb.equal(hotelZone.get(HotelAddressZone_.zoneCode), sc.getZoneId());
-            predicates.add(predicate);
-        }
-
-        // count items
-        CriteriaQuery<Long> cq0 = cb.createQuery(Long.class);
-        Root<HotelInfo> root0 = cq0.from(HotelInfo.class);
-        root0.alias("h");
-        if (sc.getStar() != null && sc.getStar().length() > 0 ) {
-            Join<HotelInfo, HotelAward> hotelAward0 = root0.join("hotelAwards", JoinType.LEFT);
-            hotelAward0.alias("ha");
-        }
-        if (sc.getZoneId() > 0) {
-            Join<HotelInfo, HotelAddressZone> hotelZone0 = root0.join(HotelInfo_.hotelAddressZones, JoinType.LEFT);
-            hotelZone0.alias("hz");
-        }
-        cq0.select(cb.count(root0)).where(predicates.toArray(new Predicate[0]));
-        Long count = getEm().createQuery(cq0).getSingleResult();
-
-        sc.getPage().setRowCount(count.intValue());
+        } while (isRetry && retryTimes >=0);
 
 
-        int firstPosition = (sc.getPage().getPageNo()-1) * sc.getPage().getPageSize();
-        cq.select(root).where(predicates.toArray(new Predicate[0]));
 
-        List<HotelInfo> hotelInfos = getEm().createQuery(cq).
-                setFirstResult(firstPosition).
-                setMaxResults(sc.getPage().getPageSize())
-                .getResultList();
-
-        return  hotelInfos;
+        return  hotelInfos == null? new ArrayList<HotelInfo>() : hotelInfos;
     }
 
     @Override
     public List<HotelRatePlan> searchAvailableHotelRatePlan(int hotelId, Date checkInDate, Date checkOutDate) {
-        List<HotelRatePlan> ratePlans = getEm().createQuery("select o from HotelRatePlan o where o.hotelInfo.id = :hotelId")
-                .setParameter("hotelId", hotelId)
-                .getResultList();
-        for(HotelRatePlan rp: ratePlans) {
-            List<HotelRatePlanRate> rates = getEm().createQuery("select o from HotelRatePlanRate o where o.startDate >= :startDate " +
-                    " and o.endDate <= :endDate " +
-                    " and o.hotelRatePlan.id = :id")
-                    .setParameter("id",rp.getId())
-                    .setParameter("startDate", checkInDate)
-                    .setParameter("endDate", checkOutDate)
-                    .getResultList();
+        List<HotelRatePlan> ratePlans=null;
 
-            rp.setHotelRatePlanRates(rates);
+        boolean isRetry;
+        int retryTimes = 1;
 
-        }
+        do {
+            isRetry = false;
+            try {
+                //body
+                ratePlans = getEm().createQuery("select o from HotelRatePlan o where o.hotelInfo.id = :hotelId")
+                        .setParameter("hotelId", hotelId)
+                        .getResultList();
+                for(HotelRatePlan rp: ratePlans) {
+                    List<HotelRatePlanRate> rates = getEm().createQuery("select o from HotelRatePlanRate o where o.startDate >= :startDate " +
+                            " and o.endDate <= :endDate " +
+                            " and o.hotelRatePlan.id = :id")
+                            .setParameter("id",rp.getId())
+                            .setParameter("startDate", checkInDate)
+                            .setParameter("endDate", checkOutDate)
+                            .getResultList();
+
+                    rp.setHotelRatePlanRates(rates);
+
+                }
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
 
         return ratePlans;
     }
 
     @Override
     public HotelGuestRoom getHotelRoomInfo(int hotelId, String roomTypeCode) {
-        List<HotelGuestRoom> rooms = getEm().createQuery("select o from HotelGuestRoom o where o.hotelInfo.id = :hotelId and o.invBlockCode = :roomTypeCode")
-                .setParameter("hotelId", hotelId)
-                .setParameter("roomTypeCode", roomTypeCode)
-                .getResultList();
+        List<HotelGuestRoom> rooms = null;
+
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                //body
+                rooms = getEm().createQuery("select o from HotelGuestRoom o where o.hotelInfo.id = :hotelId and o.invBlockCode = :roomTypeCode")
+                        .setParameter("hotelId", hotelId)
+                        .setParameter("roomTypeCode", roomTypeCode)
+                        .getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
 
         return  rooms.size() > 0 ? rooms.get(0) : null;
     }
@@ -457,16 +620,58 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public List<District> getDistrictByCityId(int cityId) {
-        return getEm().createQuery("select o from District o where o.cityId = :cityId")
-                .setParameter("cityId", cityId)
-                .getResultList();
+        List<District> districts = null;
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                //body
+                districts = getEm().createQuery("select o from District o where o.cityId = :cityId")
+                        .setParameter("cityId", cityId)
+                        .getResultList();
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
+
+        return districts;
     }
 
     @Override
     public List<Zone> getZoneByCityId(int cityId) {
-        return getEm().createQuery("select o from Zone o where o.cityId = :cityId")
-                .setParameter("cityId", cityId)
-                .getResultList();
+        List<Zone> zones = null;
+
+        boolean isRetry;
+        int retryTimes = 1;
+
+        do {
+            isRetry = false;
+            try {
+                //body
+                zones = getEm().createQuery("select o from Zone o where o.cityId = :cityId")
+                        .setParameter("cityId", cityId)
+                        .getResultList();
+
+            } catch (PersistenceException e) {
+                closeEntityManager();
+
+                logger.error(e.getMessage());
+                logger.info("try again in getHotelInfoByHotelCode.");
+
+                retryTimes--;
+                isRetry = true;
+            }
+        } while (isRetry && retryTimes >=0);
+
+        return zones;
     }
 
     @Override
