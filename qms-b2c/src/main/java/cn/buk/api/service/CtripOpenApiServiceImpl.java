@@ -1292,7 +1292,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
     public String refreshAllHotelDetail() {
         String rs = "HAHA";
 
-        List<String> hotelCodes0 = hotelDao.getAllHotelCodes();
+        List<String> hotelCodes0 = hotelDao.getAllHotelCodes2();
 
         int count = 0;
         List<String> hotelCodes = new ArrayList<String>();

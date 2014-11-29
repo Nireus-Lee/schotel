@@ -66,4 +66,7 @@ public interface HotelDao {
     public List<Zone> getZoneByCityId(int cityId);
 
     public int createCacheHotelCacheChange(CacheHotelCacheChange cacheHotelCacheChange);
+
+    public List<String> getAllHotelCodes2();
+
 }

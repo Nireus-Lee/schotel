@@ -690,4 +690,26 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         }
         return 0;
     }
+
+    @Override
+    public List<String> getAllHotelCodes2() {
+        List<String> hotelCodes = new ArrayList<String>();
+
+        try {
+            //body
+            Date date = DateUtil.getCurDate();
+            date = DateUtil.add(date, -7);
+
+            hotelCodes = getEm().createQuery("select h.hotelCode from HotelInfo h where h.hotelCode not in (select o.hotelCode from CacheHotel o where o.cacheTime < :date)")
+                    .setParameter("date", date)
+                    .getResultList();
+        } catch (PersistenceException e) {
+
+            logger.error(e.getMessage());
+            logger.info("should try again in getAllHotelCodes2 ?");
+
+        }
+
+        return hotelCodes;
+    }
 }

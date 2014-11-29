@@ -58,7 +58,7 @@ public class HotelRatePlanRate {
     @Temporal(TemporalType.TIMESTAMP)
     private Date laterReserveTime;
 
-    @OneToMany(mappedBy = "hotelRatePlanRate", cascade = {CascadeType.ALL})
+    @OneToMany(mappedBy = "hotelRatePlanRate", cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     private List<HotelRatePlanRateBaseByGuestAmount> hotelRatePlanRateBaseByGuestAmounts;
 
     @OneToMany(mappedBy = "hotelRatePlanRate", cascade = {CascadeType.ALL})

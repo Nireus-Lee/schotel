@@ -58,7 +58,7 @@ public class HotelRatePlan {
     /**
      * 特定价格计划范围内的酒店可卖产品描述列表，这里特指房型描述
      */
-    @OneToMany(mappedBy = "hotelRatePlan", cascade = {CascadeType.ALL})
+    @OneToMany(mappedBy = "hotelRatePlan", cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     private List<HotelRatePlanSellableProduct> hotelRatePlanSellableProducts;
 
 

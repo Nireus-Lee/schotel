@@ -96,7 +96,7 @@ public class HotelInfo {
     private List<HotelServiceInfo> hotelServices;
 
 
-    @OneToMany(mappedBy = "hotelInfo", cascade = {CascadeType.ALL})
+    @OneToMany(mappedBy = "hotelInfo", cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     private List<HotelAward> hotelAwards;
 
     @OneToMany(mappedBy = "hotelInfo", cascade = {CascadeType.ALL})
