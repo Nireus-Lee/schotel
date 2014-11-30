@@ -28,6 +28,8 @@ import org.apache.log4j.Logger;
 import org.dom4j.*;
 import org.dom4j.io.DocumentResult;
 import org.dom4j.io.SAXReader;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -45,6 +47,7 @@ import java.util.*;
  * Date: 14-9-18
  * Time: 下午2:41
  */
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
     private static Logger logger = Logger.getLogger(CtripOpenApiServiceImpl.class);
@@ -422,6 +425,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
     }
 
 
+    @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
     private String processHotelDetailResponse(Document document) {
         if (document == null) return "ER#Document is null.";
 

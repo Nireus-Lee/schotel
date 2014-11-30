@@ -32,14 +32,14 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
             if (hotelInfos.size() > 0) {
                retCode = 2;
             } else {
-                em.getTransaction().begin();
+                //em.getTransaction().begin();
                 em.persist(hotelInfo);
-                em.getTransaction().commit();
+                //em.getTransaction().commit();
 
                 retCode = 1;
             }
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            //if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
             logger.info("HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName());
             logger.warn(ex.getMessage());
@@ -81,13 +81,13 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int retCode = 0;
         EntityManager em = createEntityManager();
         try {
-            em.getTransaction().begin();
+           // em.getTransaction().begin();
             em.merge(hotelInfo);
-            em.getTransaction().commit();
+            //em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+           // if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
             logger.error("updateHotelInfo failed: (HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName() + ")");
             logger.error(ex.getMessage());
@@ -193,15 +193,15 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
             if (ratePlans.size() > 0) {
                 retCode = 2;
             } else {
-                em.getTransaction().begin();
+              //  em.getTransaction().begin();
                 em.persist(hotelRatePlan);
-                em.getTransaction().commit();
+            //    em.getTransaction().commit();
 
                 retCode = 1;
             }
 
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+          //  if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
             ex.printStackTrace();
     }            finally {
@@ -243,13 +243,12 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int retCode = 0;
         EntityManager em = createEntityManager();
         try {
-            em.getTransaction().begin();
+         //   em.getTransaction().begin();
             em.persist(cacheCity);
-            em.getTransaction().commit();
-
+//
                 retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+       //     if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         } finally {
             em.close();
@@ -262,13 +261,13 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int retCode = 0;
         EntityManager em = createEntityManager();
         try {
-            em.getTransaction().begin();
+            //em.getTransaction().begin();
             em.merge(cacheCity);
-            em.getTransaction().commit();
+            //em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            //if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         }
         return retCode;
@@ -308,17 +307,17 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         EntityManager em = createEntityManager();
         try {
 
-            em.getTransaction().begin();
+        //    em.getTransaction().begin();
             em.persist(cacheHotel);
-            em.getTransaction().commit();
+       //     em.getTransaction().commit();
 
 
             retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+          //  if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         }finally {
-            em.close();
+       //     em.close();
         }
         return retCode;
     }
@@ -328,16 +327,16 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int retCode = 0;
         EntityManager em = createEntityManager();
         try {
-            em.getTransaction().begin();
+    //        em.getTransaction().begin();
             em.merge(cacheHotel);
-            em.getTransaction().commit();
+   //         em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+     //       if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         }  finally {
-            em.close();
+  //          em.close();
         }
         return retCode;
     }
@@ -376,16 +375,16 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         EntityManager em = createEntityManager();
         try {
 
-            em.getTransaction().begin();
+    //        em.getTransaction().begin();
             em.persist(cacheRatePlan);
-            em.getTransaction().commit();
+     //       em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+      //      if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         } finally {
-            em.close();
+   //         em.close();
         }
         return retCode;
     }
@@ -395,16 +394,16 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int retCode = 0;
         EntityManager em = createEntityManager();
         try {
-            em.getTransaction().begin();
+    //        em.getTransaction().begin();
             em.merge(cacheRatePlan);
-            em.getTransaction().commit();
+  //          em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+      //      if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         }  finally {
-            em.close();
+     //       em.close();
         }
         return retCode;
     }
@@ -584,13 +583,13 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int retCode = 0;
         EntityManager em = createEntityManager();
         try {
-            em.getTransaction().begin();
+        //    em.getTransaction().begin();
             em.persist(district);
-            em.getTransaction().commit();
+      //      em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+        //    if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         } finally {
             em.close();
@@ -603,13 +602,13 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int retCode = 0;
         EntityManager em = createEntityManager();
         try {
-            em.getTransaction().begin();
+  //          em.getTransaction().begin();
             em.persist(zone);
-            em.getTransaction().commit();
+    //        em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+   //         if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         } finally {
             em.close();
@@ -678,12 +677,12 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         int retCode = 0;
         EntityManager em = createEntityManager();
         try {
-            em.getTransaction().begin();
+         //   em.getTransaction().begin();
             em.persist(cacheHotelCacheChange);
-            em.getTransaction().commit();
+          //  em.getTransaction().commit();
             return  1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+           // if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         } finally {
             em.close();

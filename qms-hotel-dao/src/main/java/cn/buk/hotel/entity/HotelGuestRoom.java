@@ -60,7 +60,7 @@ public class HotelGuestRoom {
     /**
      * 房间设施
      */
-    @OneToMany(mappedBy = "hotelGuestRoom", cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "hotelGuestRoom", cascade = {CascadeType.ALL})
     private List<HotelGuestRoomAmenity> hotelGuestRoomAmenities;
 
     public int getId() {

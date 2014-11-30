@@ -12,6 +12,8 @@ import cn.buk.hotel.sc.HotelSearchCriteria;
 import cn.buk.hotel.dao.CityDao;
 import cn.buk.util.DateUtil;
 import org.apache.log4j.Logger;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,6 +25,7 @@ import java.util.List;
  * Date: 14-10-29
  * Time: 下午1:41
  */
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 public class HotelServiceImpl implements HotelService {
 
     private static Logger logger = Logger.getLogger(HotelServiceImpl.class);
