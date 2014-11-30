@@ -16,6 +16,9 @@
     <listener>
         <listener-class>cn.buk.qms.listener.WebConfigListener</listener-class>
     </listener>
+	<listener>
+		<listener-class>cn.buk.qms.listener.QuartzContextListener</listener-class>
+	</listener>
 
 	<filter>
 		<filter-name>struts2</filter-name>

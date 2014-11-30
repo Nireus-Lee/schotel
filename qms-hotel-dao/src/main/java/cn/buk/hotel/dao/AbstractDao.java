@@ -13,7 +13,7 @@ public abstract class AbstractDao {
 	protected EntityManager entityManager;
 	
 	public EntityManager getEm() {
-		System.out.print("entity manager: " + entityManager);
+		//System.out.print("entity manager: " + entityManager);
 		return entityManager;
 	}
 
