@@ -281,8 +281,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         net.sf.ehcache.Element cacheElement = cache.get(cacheKey);
         if (cacheElement != null) {
             Element headerElement = (Element)cacheElement.getValue();
-            //<Header ShouldRecordPerformanceTime="False" Timestamp="2013-06-25 14:49:04:54424" ReferenceID="bbfc4ced-446d-4374-a852-2e53511b8d72" RecentlyTime="2013-06-25 14:48:31"
-            // AccessCount="30000" CurrentCount="622" ResetTime="2013-06-25 14:49:31" ResultCode="Success" />
+
             int accessCount = Integer.parseInt(headerElement.attributeValue("AccessCount"));
             int currentCount = Integer.parseInt(headerElement.attributeValue("CurrentCount"));
             logger.info("AccessCount=" + headerElement.attributeValue("AccessCount")
@@ -297,9 +296,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                     ex.printStackTrace();
                 }
             }
-
         }
-
 
         HotelRequestBody request = new HotelRequestBody();
         request.createHotelRequestRQ();
@@ -334,7 +331,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             return "ER";
         }
 
-        logger.info(xml);
+        //logger.info(xml);
 
         String response = execApiRequest(xml, ConfigData.OTA_HotelSearch_Url, "requestXML");
         //处理结果
@@ -365,10 +362,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         //放置到缓存，用于记录header中的参数
         getCache().put(new net.sf.ehcache.Element(ConfigData.OTA_HotelSearch_Request, headerElement));
 
-        //logger.info(headerElement.attribute("ReferenceID").getValue());
-
         List myNodes = document.selectNodes("/Response/HotelResponse/*");
-        //logger.info(myNodes.size());
         Element eleOtaHotelSearchRS = (Element) myNodes.get(0);
 
         XStream xs = new XStream();
@@ -382,7 +376,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         logger.info("xml -> object: " + spanMilliSeconds + "ms.");
         int total = response.getHotelInfos().size();
         if (total == 0) {
-            logger.info(xml);
+            //logger.info(xml);
             if (response.getSuccess() != null) {
                 logger.info("There is no hotel.");
                 return "OK#0 hotel";
@@ -402,11 +396,11 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             int retCode = hotelDao.createHotelInfo(hotelInfo1);
             int spanMilliSeconds2 = DateUtil.getPastTime(date0);
 
-            if ( retCode == 1) {
+            if ( retCode == 1 || retCode == 2) {
                 saveCount++;
             }
-            else if (retCode == 2)
-                logger.info("HotelCode: " + hotelInfo1.getHotelCode() + ", HotelName: " + hotelInfo1.getHotelName() + " is existed.");
+            //else if (retCode == 2)
+            //    logger.info("HotelCode: " + hotelInfo1.getHotelCode() + ", HotelName: " + hotelInfo1.getHotelName() + " is existed.");
 
             count++;
             if (count % 100 == 0) {
@@ -414,7 +408,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             }
         }
 
-        rs += saveCount + " be saved.";
+       // rs += saveCount + " be saved.";
         if (saveCount > 0)
             rs = "OK#" + saveCount + " be saved";
         else

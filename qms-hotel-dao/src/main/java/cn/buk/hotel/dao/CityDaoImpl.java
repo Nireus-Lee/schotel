@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
+import javax.transaction.Transactional;
 import java.util.List;
 
 
@@ -22,20 +23,16 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
     private static Logger logger = Logger.getLogger(CityDaoImpl.class);
 
     @Override
+    @Transactional
     public int create(City city) {
         int retStatus = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-            em.getTransaction().begin();
             em.persist(city);
-            em.getTransaction().commit();
             retStatus = 1;
         } catch (Exception ex) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retStatus = -1;
-            ex.printStackTrace();
-        } finally {
-            em.close();
+            logger.error(ex.getMessage());
         }
         return retStatus;
     }
@@ -63,18 +60,12 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
 
     @Override
     public List<City> getAllCity() {
-        List<City> cities;
+        List<City> cities = null;
         try {
             cities = getEm().createQuery("select o from City o order by o.openApiId")
                     .getResultList();
         } catch (PersistenceException e) {
             logger.error(e.getMessage());
-           this.entityManager.close();
-            this.entityManager = createEntityManager();
-
-            logger.info("try again");
-            cities = getEm().createQuery("select o from City o order by o.openApiId")
-                    .getResultList();
         }
         return cities;
     }

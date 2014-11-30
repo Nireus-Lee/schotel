@@ -13,19 +13,8 @@ public abstract class AbstractDao {
 	protected EntityManager entityManager;
 	
 	public EntityManager getEm() {
+		System.out.print("entity manager: " + entityManager);
 		return entityManager;
 	}
 
-	protected void closeEntityManager() {
-		entityManager.close();
-		entityManager = null;
-	}
-
-	public EntityManager createEntityManager() {
-		return entityManager;
-	}
-
-	public void setEm(EntityManager entityManager) {
-		this.entityManager = entityManager;
-	}	
 }

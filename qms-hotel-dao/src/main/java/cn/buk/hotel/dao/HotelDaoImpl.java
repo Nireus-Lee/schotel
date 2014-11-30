@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.criteria.*;
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,9 +23,10 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
 
     @Override
+    @Transactional
     public int createHotelInfo(HotelInfo hotelInfo) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
             List<HotelInfo> hotelInfos = em.createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
                     .setParameter("hotelCode", hotelInfo.getHotelCode())
@@ -32,19 +34,12 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
             if (hotelInfos.size() > 0) {
                retCode = 2;
             } else {
-                //em.getTransaction().begin();
                 em.persist(hotelInfo);
-                //em.getTransaction().commit();
-
                 retCode = 1;
             }
         } catch (Exception ex) {
-            //if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-            logger.info("HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName());
-            logger.warn(ex.getMessage());
-        } finally {
-            em.close();
+            logger.info("HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName() + ": " + ex.getMessage());
         }
         return retCode;
     }
@@ -53,46 +48,28 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     public HotelInfo getHotelInfoByHotelCode(String hotelCode) {
         List<HotelInfo> hotelInfos = new ArrayList<HotelInfo>();
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                hotelInfos = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
-                        .setParameter("hotelCode", hotelCode)
-                        .getResultList();
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            hotelInfos = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
+                    .setParameter("hotelCode", hotelCode)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return hotelInfos.size() > 0 ? hotelInfos.get(0): null;
     }
 
     @Override
+    @Transactional
     public int updateHotelInfo(HotelInfo hotelInfo) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-           // em.getTransaction().begin();
             em.merge(hotelInfo);
-            //em.getTransaction().commit();
-
             retCode = 1;
         } catch (Exception ex) {
-           // if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-            logger.error("updateHotelInfo failed: (HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName() + ")");
-            logger.error(ex.getMessage());
-        }finally {
-            em.close();
+            logger.error("updateHotelInfo failed: (HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName() + ")：" + ex.getMessage());
         }
         return retCode;
     }
@@ -101,23 +78,11 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     public List<HotelInfo> getAllHotelInfo() {
         List<HotelInfo> hotelInfos = new ArrayList<HotelInfo>();
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();;
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            hotelInfos = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();;
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return  hotelInfos;
     }
@@ -126,54 +91,29 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     public List<String> getAllHotelCodes() {
         List<String> hotelCodes = new ArrayList<String>();
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                //body
-                hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            //body
+            hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o order by o.id").getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return  hotelCodes;
     }
 
     @Override
     public List<String> getAllHotelCodesByCityId(int cityId) {
-
         List<String> hotelCodes = new ArrayList<String>();
         Date baseTime = DateUtil.getCurDateTime();
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                //body
-                hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o where o.cityId = :cityId order by o.id")
-                        .setParameter("cityId", cityId)
-                        .getResultList();
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            //body
+            hotelCodes = getEm().createQuery("select o.hotelCode from HotelInfo o where o.cityId = :cityId order by o.id")
+                    .setParameter("cityId", cityId)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         int span = DateUtil.getPastTime(baseTime);
         logger.info("get all hotel codes in city (" + cityId + ") elapsed: " + span + "ms.");
@@ -182,9 +122,10 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     }
 
     @Override
+    @Transactional
     public int createHotelRatePlan(HotelRatePlan hotelRatePlan) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
             List<HotelRatePlan> ratePlans = em.createQuery("select o from HotelRatePlan o where o.ratePlanCode = :ratePlanCode and o.hotelInfo = :hotelInfo")
                     .setParameter("ratePlanCode", hotelRatePlan.getRatePlanCode())
@@ -193,19 +134,13 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
             if (ratePlans.size() > 0) {
                 retCode = 2;
             } else {
-              //  em.getTransaction().begin();
                 em.persist(hotelRatePlan);
-            //    em.getTransaction().commit();
-
                 retCode = 1;
             }
 
         } catch (Exception ex) {
-          //  if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-            ex.printStackTrace();
-    }            finally {
-            em.close();
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
@@ -214,60 +149,42 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     public CacheCity getCacheCity(int cityId) {
         List<CacheCity> cacheCities = new ArrayList<CacheCity>();
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                //body
-                cacheCities = getEm().createQuery("select o from CacheCity o where o.cityId = :cityId")
-                        .setParameter("cityId", cityId)
-                        .getResultList();
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            //body
+            cacheCities = getEm().createQuery("select o from CacheCity o where o.cityId = :cityId")
+                    .setParameter("cityId", cityId)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return cacheCities.size() > 0 ? cacheCities.get(0) : null;
     }
 
     @Override
+    @Transactional
     public int createCacheCity(CacheCity cacheCity) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-         //   em.getTransaction().begin();
             em.persist(cacheCity);
-//
                 retCode = 1;
         } catch (Exception ex) {
-       //     if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-        } finally {
-            em.close();
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
 
     @Override
+    @Transactional
     public int updateCacheCity(CacheCity cacheCity) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-            //em.getTransaction().begin();
             em.merge(cacheCity);
-            //em.getTransaction().commit();
-
             retCode = 1;
         } catch (Exception ex) {
-            //if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
         }
         return retCode;
@@ -277,66 +194,45 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     public CacheHotel getCacheHotel(String hotelCode) {
         List<CacheHotel> cacheHotels = new ArrayList<CacheHotel>();
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                //body
-                cacheHotels = getEm().createQuery("select o from CacheHotel o where o.hotelCode = :hotelCode")
-                        .setParameter("hotelCode", hotelCode)
-                        .getResultList();
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            //body
+            cacheHotels = getEm().createQuery("select o from CacheHotel o where o.hotelCode = :hotelCode")
+                    .setParameter("hotelCode", hotelCode)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return cacheHotels.size() > 0 ? cacheHotels.get(0) : null;
     }
 
     @Override
+    @Transactional
     public int createCacheHotel(CacheHotel cacheHotel) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-
-        //    em.getTransaction().begin();
             em.persist(cacheHotel);
-       //     em.getTransaction().commit();
-
 
             retCode = 1;
         } catch (Exception ex) {
-          //  if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-        }finally {
-       //     em.close();
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
 
     @Override
+    @Transactional
     public int updateCacheHotel(CacheHotel cacheHotel) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-    //        em.getTransaction().begin();
             em.merge(cacheHotel);
-   //         em.getTransaction().commit();
-
             retCode = 1;
         } catch (Exception ex) {
-     //       if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-        }  finally {
-  //          em.close();
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
@@ -344,66 +240,46 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     @Override
     public CacheRatePlan getCacheRatePlan(String hotelCode, int periodId) {
         List<CacheRatePlan> cacheRatePlans = new ArrayList<CacheRatePlan>();
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                //body
-                cacheRatePlans = getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
-                        .setParameter("hotelCode", hotelCode)
-                        .setParameter("periodId", periodId)
-                        .getResultList();
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            //body
+            cacheRatePlans = getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
+                    .setParameter("hotelCode", hotelCode)
+                    .setParameter("periodId", periodId)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return cacheRatePlans.size() > 0 ? cacheRatePlans.get(0) : null;
     }
 
     @Override
+    @Transactional
     public int createCacheRatePlan(CacheRatePlan cacheRatePlan) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-
-    //        em.getTransaction().begin();
             em.persist(cacheRatePlan);
-     //       em.getTransaction().commit();
-
             retCode = 1;
         } catch (Exception ex) {
-      //      if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-        } finally {
-   //         em.close();
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
 
     @Override
+    @Transactional
     public int updateCacheRatePlan(CacheRatePlan cacheRatePlan) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-    //        em.getTransaction().begin();
             em.merge(cacheRatePlan);
-  //          em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-      //      if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-        }  finally {
-     //       em.close();
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
@@ -413,11 +289,7 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
         List<HotelInfo> hotelInfos = null;
 
-        boolean isRetry;
-        int retryTimes = 1;
 
-        do {
-            isRetry = false;
             try {
                 //body
                 CriteriaBuilder cb = getEm().getCriteriaBuilder();
@@ -489,17 +361,8 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
                         setMaxResults(sc.getPage().getPageSize())
                         .getResultList();
             } catch (PersistenceException e) {
-                closeEntityManager();
-
                 logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
             }
-        } while (isRetry && retryTimes >=0);
-
-
 
         return  hotelInfos == null? new ArrayList<HotelInfo>() : hotelInfos;
     }
@@ -508,38 +371,25 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     public List<HotelRatePlan> searchAvailableHotelRatePlan(int hotelId, Date checkInDate, Date checkOutDate) {
         List<HotelRatePlan> ratePlans=null;
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                //body
-                ratePlans = getEm().createQuery("select o from HotelRatePlan o where o.hotelInfo.id = :hotelId")
-                        .setParameter("hotelId", hotelId)
+        try {
+            //body
+            ratePlans = getEm().createQuery("select o from HotelRatePlan o where o.hotelInfo.id = :hotelId")
+                    .setParameter("hotelId", hotelId)
+                    .getResultList();
+            for(HotelRatePlan rp: ratePlans) {
+                List<HotelRatePlanRate> rates = getEm().createQuery("select o from HotelRatePlanRate o where o.startDate >= :startDate " +
+                        " and o.endDate <= :endDate " +
+                        " and o.hotelRatePlan.id = :id")
+                        .setParameter("id", rp.getId())
+                        .setParameter("startDate", checkInDate)
+                        .setParameter("endDate", checkOutDate)
                         .getResultList();
-                for(HotelRatePlan rp: ratePlans) {
-                    List<HotelRatePlanRate> rates = getEm().createQuery("select o from HotelRatePlanRate o where o.startDate >= :startDate " +
-                            " and o.endDate <= :endDate " +
-                            " and o.hotelRatePlan.id = :id")
-                            .setParameter("id",rp.getId())
-                            .setParameter("startDate", checkInDate)
-                            .setParameter("endDate", checkOutDate)
-                            .getResultList();
 
-                    rp.setHotelRatePlanRates(rates);
-
-                }
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
+                rp.setHotelRatePlanRates(rates);
             }
-        } while (isRetry && retryTimes >=0);
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return ratePlans;
     }
@@ -548,27 +398,15 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     public HotelGuestRoom getHotelRoomInfo(int hotelId, String roomTypeCode) {
         List<HotelGuestRoom> rooms = null;
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                //body
-                rooms = getEm().createQuery("select o from HotelGuestRoom o where o.hotelInfo.id = :hotelId and o.invBlockCode = :roomTypeCode")
-                        .setParameter("hotelId", hotelId)
-                        .setParameter("roomTypeCode", roomTypeCode)
-                        .getResultList();
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            //body
+            rooms = getEm().createQuery("select o from HotelGuestRoom o where o.hotelInfo.id = :hotelId and o.invBlockCode = :roomTypeCode")
+                    .setParameter("hotelId", hotelId)
+                    .setParameter("roomTypeCode", roomTypeCode)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return  rooms.size() > 0 ? rooms.get(0) : null;
     }
@@ -579,39 +417,32 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     }
 
     @Override
+    @Transactional
     public int createDistrict(District district) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-        //    em.getTransaction().begin();
             em.persist(district);
-      //      em.getTransaction().commit();
 
             retCode = 1;
         } catch (Exception ex) {
-        //    if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-        } finally {
-            em.close();
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
 
     @Override
+    @Transactional
     public int createZone(Zone zone) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-  //          em.getTransaction().begin();
             em.persist(zone);
-    //        em.getTransaction().commit();
-
             retCode = 1;
         } catch (Exception ex) {
-   //         if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-        } finally {
-            em.close();
+            logger.error(ex.getMessage());
         }
         return retCode;
     }
@@ -619,26 +450,15 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     @Override
     public List<District> getDistrictByCityId(int cityId) {
         List<District> districts = null;
-        boolean isRetry;
-        int retryTimes = 1;
 
-        do {
-            isRetry = false;
-            try {
-                //body
-                districts = getEm().createQuery("select o from District o where o.cityId = :cityId")
-                        .setParameter("cityId", cityId)
-                        .getResultList();
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            //body
+            districts = getEm().createQuery("select o from District o where o.cityId = :cityId")
+                    .setParameter("cityId", cityId)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return districts;
     }
@@ -647,45 +467,29 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     public List<Zone> getZoneByCityId(int cityId) {
         List<Zone> zones = null;
 
-        boolean isRetry;
-        int retryTimes = 1;
-
-        do {
-            isRetry = false;
-            try {
-                //body
-                zones = getEm().createQuery("select o from Zone o where o.cityId = :cityId")
-                        .setParameter("cityId", cityId)
-                        .getResultList();
-
-            } catch (PersistenceException e) {
-                closeEntityManager();
-
-                logger.error(e.getMessage());
-                logger.info("try again in getHotelInfoByHotelCode.");
-
-                retryTimes--;
-                isRetry = true;
-            }
-        } while (isRetry && retryTimes >=0);
+        try {
+            //body
+            zones = getEm().createQuery("select o from Zone o where o.cityId = :cityId")
+                    .setParameter("cityId", cityId)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
 
         return zones;
     }
 
     @Override
+    @Transactional
     public int createCacheHotelCacheChange(CacheHotelCacheChange cacheHotelCacheChange) {
         int retCode = 0;
-        EntityManager em = createEntityManager();
+        EntityManager em = getEm();
         try {
-         //   em.getTransaction().begin();
             em.persist(cacheHotelCacheChange);
-          //  em.getTransaction().commit();
             return  1;
         } catch (Exception ex) {
-           // if (em.getTransaction().isActive()) em.getTransaction().rollback();
             retCode = -1;
-        } finally {
-            em.close();
+            logger.error(ex.getMessage());
         }
         return 0;
     }
@@ -703,10 +507,7 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
                     .setParameter("date", date)
                     .getResultList();
         } catch (PersistenceException e) {
-
             logger.error(e.getMessage());
-            logger.info("should try again in getAllHotelCodes2 ?");
-
         }
 
         return hotelCodes;

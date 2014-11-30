@@ -47,7 +47,7 @@
     <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
         <property name="database" value="SQL_SERVER" />
         <property name="databasePlatform" value="org.hibernate.dialect.SQLServer2008Dialect" />
-        <property name="showSql" value="true" />
+        <property name="showSql" value="false" />
     </bean>
 
     <bean id="emf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
