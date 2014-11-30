@@ -503,7 +503,7 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
             Date date = DateUtil.getCurDate();
             date = DateUtil.add(date, -7);
 
-            hotelCodes = getEm().createQuery("select h.hotelCode from HotelInfo h where h.hotelCode not in (select o.hotelCode from CacheHotel o where o.cacheTime < :date)")
+            hotelCodes = getEm().createQuery("select h.hotelCode from HotelInfo h where h.hotelCode not in (select o.hotelCode from CacheHotel o where o.cacheTime > :date)")
                     .setParameter("date", date)
                     .getResultList();
         } catch (PersistenceException e) {
