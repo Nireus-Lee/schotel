@@ -65,26 +65,27 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         HotelInfo hotelInfo = null;
 
         try {
-            List<HotelInfo> hotelInfos = getEm().createQuery("select o from HotelInfo o  " +
-                    "join fetch o.hotelAddressZones " +
-                    "join fetch o.hotelServices " +
-                    "join fetch o.hotelAwards " +
-                    " join fetch o.relativePositions " +
-                    " join fetch o.guestRooms join fetch o.relativePositions "+
-                    "join fetch o.medias where o.hotelCode = :hotelCode ")
+            List<HotelInfo> hotelInfos = getEm().createQuery("select o from HotelInfo o   where o.hotelCode = :hotelCode ")
                     .setParameter("hotelCode", hotelCode)
                     .getResultList();
             if (hotelInfos.size() > 0) {
                 hotelInfo = hotelInfos.get(0);
 
+                hotelInfo.setHotelAddressZones(getEm().createQuery("select o from HotelAddressZone o where o.hotelInfo = :hotelInfo").setParameter("hotelInfo", hotelInfo).getResultList());
 
-//                hotelInfo.getHotelAddressZones().size();
-//                hotelInfo.getHotelServices().size();
-//                hotelInfo.getHotelAwards().size();
-//                hotelInfo.getRelativePositions().size();
-//                hotelInfo.getGuestRooms().size();
-//                hotelInfo.getRefPoints().size();
-//                hotelInfo.getMedias().size();
+
+               // hotelInfo.getHotelServices().size();
+                hotelInfo.setHotelServices(getEm().createQuery("select o from HotelServiceInfo o where o.hotelInfo = :hotelInfo").setParameter("hotelInfo", hotelInfo).getResultList());
+                //hotelInfo.getHotelAwards().size();
+                hotelInfo.setHotelAwards(getEm().createQuery("select o from HotelAward o where o.hotelInfo = :hotelInfo").setParameter("hotelInfo", hotelInfo).getResultList());
+               // hotelInfo.getRelativePositions().size();
+                hotelInfo.setRelativePositions(getEm().createQuery("select o from HotelRelativePosition o where o.hotelInfo = :hotelInfo").setParameter("hotelInfo", hotelInfo).getResultList());
+                //hotelInfo.getGuestRooms().size();
+                hotelInfo.setGuestRooms(getEm().createQuery("select o from HotelGuestRoom o where o.hotelInfo = :hotelInfo").setParameter("hotelInfo", hotelInfo).getResultList());
+               // hotelInfo.getRefPoints().size();
+                hotelInfo.setRefPoints(getEm().createQuery("select o from HotelRefPoint o where o.hotelInfo = :hotelInfo").setParameter("hotelInfo", hotelInfo).getResultList());
+                //hotelInfo.getMedias().size();
+                hotelInfo.setMedias(getEm().createQuery("select o from HotelMultimediaInfo o where o.hotelInfo = :hotelInfo").setParameter("hotelInfo", hotelInfo).getResultList());
             }
         } catch (PersistenceException e) {
             logger.error(e.getMessage());
