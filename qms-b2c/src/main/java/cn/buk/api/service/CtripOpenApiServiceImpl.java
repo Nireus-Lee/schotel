@@ -482,8 +482,8 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                     if (response.getHotelInfo().getWhenBuilt() != null)
                         hotelInfo1.setBuildDate(DateUtil.convertToDate(response.getHotelInfo().getWhenBuilt()));
                 } catch (Exception e) {
-                    logger.info("WhenBuild: " + response.getHotelInfo().getWhenBuilt());
-                    e.printStackTrace();
+                    logger.error("WhenBuild: " + response.getHotelInfo().getWhenBuilt());
+                    logger.error(e.getMessage());
                     return "ER#WhenBuild: " + response.getHotelInfo().getWhenBuilt();
                 }
 
@@ -621,7 +621,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 Date date0 = DateUtil.getCurDateTime();
                 int retCode = hotelDao.updateHotelInfo(hotelInfo1);
                 int spanTime3 = DateUtil.getPastTime(date0);
-                logger.info("HotelCode[" + hotelCode + "]: 保存耗时　" + spanTime3 + "ms, retCode=" + retCode);
+                //logger.info("HotelCode[" + hotelCode + "]: 保存耗时　" + spanTime3 + "ms, retCode=" + retCode);
                 span4 = DateUtil.getPastTime(baseTime);
                 if (retCode == 1) {
                     rs = "OK#Save OK";
@@ -633,7 +633,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                         cacheHotel.setHotelCode(hotelCode);
                         span7 = 0;
                         if (hotelDao.createCacheHotel(cacheHotel) == 1) {
-                            logger.info("new cacheHotel is ok. -- " + cacheHotel.getHotelCode());
+                            //logger.info("new cacheHotel is ok. -- " + cacheHotel.getHotelCode());
                             span7 = DateUtil.getPastTime(baseTime);
                         }
                     } else {
@@ -683,7 +683,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         List myNodes = xpath.selectNodes(document);
 
         if (myNodes.size()==0) {
-            logger.info("OK#There is nothing.");
+            logger.error("OK#There is nothing.");
             return "OK#There is nothing.";
         }
 
@@ -697,7 +697,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             Element element = (Element) it.next();
 
             if (element.getName().equalsIgnoreCase("RatePlans") == false) {
-                logger.info("element.name: " + element.getName());
+                //logger.info("element.name: " + element.getName());
                 continue;
             }
 
@@ -742,7 +742,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                         }
                     } catch (Exception ex) {
                         errorCount++;
-                        ex.printStackTrace();
+                        logger.error(ex.getMessage());
                         return "ER#HotelCode is " + hotelCode + ", rate plan occur exception.";
                     }
                 }  // end for
@@ -765,7 +765,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             }
 
             int span3 = DateUtil.getPastTime(baseTime1);
-            logger.info(String.format("hotel code[%s]: span1=%dms, span2=%dms, span3=%dms", hotelCode, span1, span2, span3));
+            //logger.info(String.format("hotel code[%s]: span1=%dms, span2=%dms, span3=%dms", hotelCode, span1, span2, span3));
         }
         int spanTotal = DateUtil.getPastTime(baseTime0);
         logger.info(String.format("total time : %d ms", spanTotal));
@@ -888,7 +888,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             int currentCount = Integer.parseInt(headerElement.attributeValue("CurrentCount"));
             logger.info("AccessCount=" + headerElement.attributeValue("AccessCount")
                     + ", CurrentCount=" + headerElement.attributeValue("CurrentCount")
-                    + ", RecentlyTime=" + headerElement.attributeValue("RecentlyTime")
+                    //+ ", RecentlyTime=" + headerElement.attributeValue("RecentlyTime")
                     + ", ResetTime=" + headerElement.attributeValue("ResetTime"));
             if (currentCount >= accessCount) {
                 try {
@@ -951,7 +951,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         try {
             document = reader.read(new StringReader(response));
         } catch (DocumentException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
             return "ER#xml->document";
         }
 
@@ -1299,7 +1299,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 //判断上次更新到现在是否超过7天
                 int spanDays = DateUtil.getPastDays(cacheHotel.getCacheTime());
                 if (spanDays < 7) {
-                    logger.info(hotelCode + "\'s is already updated lately.");
+                    //logger.info(hotelCode + "\'s is already updated lately.");
                     continue;
                 }
             }
