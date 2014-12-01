@@ -1366,7 +1366,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
             hotelInfo = hotelDao.getHotelInfoByHotelCode(hotelCode);
             if (hotelInfo == null || hotelInfo.getRatePlanStatus() == -1) {
-                logger.info(hotelCode + " skipped for rate plan status is -1.");
+                //logger.info(hotelCode + " skipped for rate plan status is -1.");
                 continue;
             }
 
@@ -1377,7 +1377,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
                 if (spanDays < 7) {
                     cachedCount++;
-                    logger.info(hotelCode + " skipped for cached time is short.");
+                    //logger.info(hotelCode + " skipped for cached time is short.");
                     continue;
                 }
             } else {
@@ -1414,7 +1414,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             if (bBreak) break;
         }
 
-        logger.info("cached rate plan: " + cachedCount);
+        //logger.info("cached rate plan: " + cachedCount);
 
         return rs;
     }

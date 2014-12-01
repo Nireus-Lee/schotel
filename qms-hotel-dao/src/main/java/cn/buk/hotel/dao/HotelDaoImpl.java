@@ -60,24 +60,31 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     }
 
     @Override
-    @Transactional
+    //@Transactional
     public HotelInfo getHotelDetailInfoByHotelCode(String hotelCode) {
         HotelInfo hotelInfo = null;
 
         try {
-            List<HotelInfo> hotelInfos = getEm().createQuery("select o from HotelInfo o  where o.hotelCode = :hotelCode ")
+            List<HotelInfo> hotelInfos = getEm().createQuery("select o from HotelInfo o  " +
+                    "join fetch o.hotelAddressZones " +
+                    "join fetch o.hotelServices " +
+                    "join fetch o.hotelAwards " +
+                    " join fetch o.relativePositions " +
+                    " join fetch o.guestRooms join fetch o.relativePositions "+
+                    "join fetch o.medias where o.hotelCode = :hotelCode ")
                     .setParameter("hotelCode", hotelCode)
                     .getResultList();
             if (hotelInfos.size() > 0) {
                 hotelInfo = hotelInfos.get(0);
 
-                hotelInfo.getHotelAddressZones().size();
-                hotelInfo.getHotelServices().size();
-                hotelInfo.getHotelAwards().size();
-                hotelInfo.getRelativePositions().size();
-                hotelInfo.getGuestRooms().size();
-                hotelInfo.getRefPoints().size();
-                hotelInfo.getMedias().size();
+
+//                hotelInfo.getHotelAddressZones().size();
+//                hotelInfo.getHotelServices().size();
+//                hotelInfo.getHotelAwards().size();
+//                hotelInfo.getRelativePositions().size();
+//                hotelInfo.getGuestRooms().size();
+//                hotelInfo.getRefPoints().size();
+//                hotelInfo.getMedias().size();
             }
         } catch (PersistenceException e) {
             logger.error(e.getMessage());
