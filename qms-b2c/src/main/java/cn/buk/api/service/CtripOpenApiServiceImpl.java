@@ -466,7 +466,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
             hotelCode = response.getHotelCode();
             hotelName = response.getHotelName();
-            hotelInfo1 = hotelDao.getHotelInfoByHotelCode(hotelCode);
+            hotelInfo1 = hotelDao.getHotelDetailInfoByHotelCode(hotelCode);
             span2 = DateUtil.getPastTime(baseTime);
             span3 = 0;
             span4 = 0;

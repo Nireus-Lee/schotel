@@ -61,6 +61,33 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     @Transactional
+    public HotelInfo getHotelDetailInfoByHotelCode(String hotelCode) {
+        HotelInfo hotelInfo = null;
+
+        try {
+            List<HotelInfo> hotelInfos = getEm().createQuery("select o from HotelInfo o  where o.hotelCode = :hotelCode ")
+                    .setParameter("hotelCode", hotelCode)
+                    .getResultList();
+            if (hotelInfos.size() > 0) {
+                hotelInfo = hotelInfos.get(0);
+
+                hotelInfo.getHotelAddressZones().size();
+                hotelInfo.getHotelServices().size();
+                hotelInfo.getHotelAwards().size();
+                hotelInfo.getRelativePositions().size();
+                hotelInfo.getGuestRooms().size();
+                hotelInfo.getRefPoints().size();
+                hotelInfo.getMedias().size();
+            }
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
+
+        return hotelInfo;
+    }
+
+    @Override
+    @Transactional
     public int updateHotelInfo(HotelInfo hotelInfo) {
         int retCode = 0;
         EntityManager em = getEm();

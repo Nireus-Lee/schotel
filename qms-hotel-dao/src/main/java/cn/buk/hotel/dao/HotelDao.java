@@ -16,6 +16,7 @@ public interface HotelDao {
 	public int createHotelInfo(HotelInfo hotelInfo);
 
     public HotelInfo getHotelInfoByHotelCode(String hotelCode);
+    public HotelInfo getHotelDetailInfoByHotelCode(String hotelCode);
 
     public int updateHotelInfo(HotelInfo hotelInfo);
 
@@ -68,5 +69,6 @@ public interface HotelDao {
     public int createCacheHotelCacheChange(CacheHotelCacheChange cacheHotelCacheChange);
 
     public List<String> getAllHotelCodes2();
+
 
 }
