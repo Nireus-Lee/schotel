@@ -419,7 +419,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
 
     @Transactional
-    private String processHotelDetailResponse(Document document) {
+    public String processHotelDetailResponse(Document document) {
         if (document == null) return "ER#Document is null.";
 
         Element rootElement = document.getRootElement();
@@ -577,8 +577,8 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                         point1.setName(point.getName());
                         point1.setRefPointCategoryCode(Integer.parseInt(point.getRefPointCategoryCode()));
                         point1.setRefPointName(point.getRefPointName());
-                        point.setLatitude(point1.getLatitude());
-                        point.setLongitude(point1.getLongitude());
+                        point1.setLatitude(point.getLatitude());
+                        point1.setLongitude(point.getLongitude());
                         point1.setDescription(point.getDescriptiveText());
                     }
                 }
@@ -959,7 +959,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             rs = processHotelDetailResponse(document);
         } catch (Exception ex) {
             logger.error(ex.getMessage());
-            logger.info(response);
+            //logger.info(response);
             return "ER#processHotelDetailResponse";
         }
 
