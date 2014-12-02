@@ -119,6 +119,8 @@ public class HotelServiceImpl implements HotelService {
 
                 dto.addRatePlan(rpDto);
             }
+            int span4 = DateUtil.getPastTime(baseTime1);
+            logger.info("elapsed time span4: " + span4 + " ms.");
         }
         int span = DateUtil.getPastTime(baseTime);
         logger.info("total elapsed time: " + span + " ms.");

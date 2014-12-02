@@ -4,8 +4,10 @@
 */
 package cn.buk.api.service;
 
-import cn.buk.api.dto.*;
 import cn.buk.api.dto.Header;
+import cn.buk.api.dto.IntlFlightSearchResponse;
+import cn.buk.api.dto.IntlFlightSearchResult;
+import cn.buk.api.dto.Response;
 import cn.buk.api.dto.hotel.*;
 import cn.buk.api.dto.hotel.DateRange;
 import cn.buk.api.dto.hotel.HotelInfo;
@@ -90,13 +92,10 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             proxy = new Proxy(Proxy.Type.HTTP, address);
         }
 
-
         HttpAccessAdapter httpAccessAdapter = new HttpAccessAdapter();
         String response = httpAccessAdapter.SendRequestToUrl(requestContent, urlString, paraName, proxy);
         return response;
     }
-
-
 
     private Element createRequestHeaderElement(Document document, String requestType) {
         Element returnElement = document.addElement("Request");
@@ -108,7 +107,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         try {
             signature = SignatureUtils.CalculationSignature(timestamp + "", this.allianceId, this.secretKey, this.sid, requestType);
         } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error(e.getMessage());
         }
         element.addAttribute("TimeStamp",timestamp+"");
         element.addAttribute("Signature",signature);
@@ -116,7 +115,6 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
         return returnElement;
     }
-
 
     @Override
     public String importCityInfo(String filename) {
@@ -250,21 +248,6 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         return "create " + count + " record(s).";
     }
 
-    private Response convertXml2Response(String xml) {
-        XStream xs = new XStream();
-        xs.alias("Response", Response.class);
-        xs.aliasField("SearchResult", IntlFlightSearchResponse.class, "searchResult");
-        xs.processAnnotations(Response.class);
-        xs.processAnnotations(Header.class);
-        xs.processAnnotations(IntlFlightSearchResponse.class);
-        xs.processAnnotations(IntlFlightSearchResult.class);
-
-        Response response = (Response)xs.fromXML(xml);
-
-        return response;
-    }
-
-
     /**
      * 搜索指定城市的酒店信息
      * @param cityId
@@ -282,10 +265,10 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             Element headerElement = (Element)cacheElement.getValue();
 
             int accessCount = Integer.parseInt(headerElement.attributeValue("AccessCount"));
-            int currentCount = Integer.parseInt(headerElement.attributeValue("CurrentCount"));
+            int currentCount = Integer.parseInt(headerElement.attributeValue("CurrentCount")) + 1;
             logger.info("AccessCount=" + headerElement.attributeValue("AccessCount")
                     + ", CurrentCount=" + headerElement.attributeValue("CurrentCount")
-                    + ", RecentlyTime=" + headerElement.attributeValue("RecentlyTime")
+                    //+ ", RecentlyTime=" + headerElement.attributeValue("RecentlyTime")
                     + ", ResetTime=" + headerElement.attributeValue("ResetTime"));
             if (currentCount >= accessCount) {
                 try {
@@ -324,13 +307,10 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             rootElement.add(requestElement);
 
             xml = doc1.asXML();
-
         } catch (JAXBException ex) {
-            ex.printStackTrace();
+            logger.error(ex.getMessage());
             return "ER";
         }
-
-        //logger.info(xml);
 
         String response = execApiRequest(xml, ConfigData.OTA_HotelSearch_Url, "requestXML");
         //处理结果
@@ -341,8 +321,8 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             document = reader.read(new StringReader(response));
             response = processHotelSearchResponse(document);
         } catch (Exception ex) {
-            ex.printStackTrace();
-          return "ER";
+            logger.error(ex.getMessage());
+            return "ER";
         }
 
         return response;
@@ -649,7 +629,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 }
             }
             int spanTotal = DateUtil.getPastTime(baseTime);
-            logger.info(String.format("HotelCode[%s] total=%dms, span4=%d, span5=%d, span6=%d, span7=%d, span8=%d", hotelCode, spanTotal, span4, span5, span6, span7, span8));
+            //logger.info(String.format("HotelCode[%s] total=%dms, span4=%d, span5=%d, span6=%d, span7=%d, span8=%d", hotelCode, spanTotal, span4, span5, span6, span7, span8));
 
         }  //end for
 
@@ -662,123 +642,131 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
      * @param document
      * @return
      */
-    private String processHotelRatePlanResponse(Document document, int periodId) {
+    private String processHotelRatePlanResponse(final Document document, final int periodId) {
         if (document == null) return "ER#Document is null.";
 
         Element rootElement = document.getRootElement();
         Element headerElement = rootElement.element("Header");
         if (headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success") == false) {
+            logger.error(document.asXML());
             return "ER#ResultCode is not Success.";
         }
 
         //放置到缓存，用于记录header中的参数
         getCache().put(new net.sf.ehcache.Element(ConfigData.OTA_HotelRatePlan_Request, headerElement));
 
-        //此处需要在指定的命名空间里面才能找到
-        Namespace ns = new Namespace("", "http://www.opentravel.org/OTA/2003/05");
-        Map uris = new HashMap();
-        uris.put("ns", "http://www.opentravel.org/OTA/2003/05");
-        XPath xpath = document.createXPath("//ns:OTA_HotelRatePlanRS/*");
-        xpath.setNamespaceURIs(uris);
-        List myNodes = xpath.selectNodes(document);
+        //使用线程来进行保存操作
+        Runnable thread = new Runnable() {
+            public void run() {
+                //此处需要在指定的命名空间里面才能找到
+                //System.out.println(this +  "(runnable) begin...");
+                //Namespace ns = new Namespace("", "http://www.opentravel.org/OTA/2003/05");
+                Map uris = new HashMap();
+                uris.put("ns", "http://www.opentravel.org/OTA/2003/05");
+                XPath xpath = document.createXPath("//ns:OTA_HotelRatePlanRS/*");
+                xpath.setNamespaceURIs(uris);
+                List myNodes = xpath.selectNodes(document);
 
-        if (myNodes.size()==0) {
-            logger.error("OK#There is nothing.");
-            return "OK#There is nothing.";
-        }
-
-
-        String rs = "HAHA";
-
-        int saveCount = 0, errorCount = 0;
-        Date baseTime0 = DateUtil.getCurDateTime();
-        for (Iterator it = myNodes.iterator(); it.hasNext(); ) {
-            Date baseTime1 = DateUtil.getCurDateTime();
-            Element element = (Element) it.next();
-
-            if (element.getName().equalsIgnoreCase("RatePlans") == false) {
-                //logger.info("element.name: " + element.getName());
-                continue;
-            }
-
-            XStream xs = new XStream();
-            xs.alias("RatePlans", HotelRatePlans.class);
-            xs.processAnnotations(HotelRatePlans.class);
-
-            String xml =  element.asXML();
-            HotelRatePlans response = (HotelRatePlans)xs.fromXML(xml);
-            int span1 = DateUtil.getPastTime(baseTime1);
-
-            rs += ";" + response.getHotelCode();
-            String hotelCode = response.getHotelCode();
-            cn.buk.hotel.entity.HotelInfo hotelInfo1 = hotelDao.getHotelInfoByHotelCode(hotelCode);
-
-            if (response.getHotelRatePlans() == null || response.getHotelRatePlans().size() == 0) {
-                if (periodId == 1) {
-                    hotelInfo1.setRatePlanStatus(-1);
-                    hotelDao.updateHotelInfo(hotelInfo1);
+                if (myNodes.size() == 0) {
+                    logger.warn("myNodes.size() = 0");
+                    return;
                 }
-                logger.info("OK#Theres is no rates for {" + hotelCode + "," + periodId + "}.");
-                rs = "OK#Theres is no rates.";
-            } else {
 
-                cn.buk.hotel.entity.HotelRatePlan hotelRatePlan = null;
-                for(HotelRatePlan dtoRatePlan: response.getHotelRatePlans()) {
-                    try {
-                        hotelRatePlan = ConvertUtil.convertHotelRatePlan(dtoRatePlan);
-                        hotelRatePlan.setHotelInfo(hotelInfo1);
-                        int retCode = hotelDao.createHotelRatePlan(hotelRatePlan);
-                        if (retCode == 1) {
-                            saveCount++;
-                            rs = "OK#Save OK";
-                        } else if (retCode == 2) {
-                            rs = "OK#already exist.";
-                            hotelRatePlan = null;
+                //String rs = "HAHA";
+
+                //int saveCount = 0, errorCount = 0;
+                Date baseTime0 = DateUtil.getCurDateTime();
+                for (Iterator it = myNodes.iterator(); it.hasNext(); ) {
+                    //Date baseTime1 = DateUtil.getCurDateTime();
+                    Element element = (Element) it.next();
+
+                    if (element.getName().equalsIgnoreCase("RatePlans") == false) continue;
+
+                    XStream xs = new XStream();
+                    xs.alias("RatePlans", HotelRatePlans.class);
+                    xs.processAnnotations(HotelRatePlans.class);
+
+                    String xml = element.asXML();
+                    HotelRatePlans response = (HotelRatePlans) xs.fromXML(xml);
+                    //int span1 = DateUtil.getPastTime(baseTime1);
+
+                    //rs += ";" + response.getHotelCode();
+                    String hotelCode = response.getHotelCode();
+                    cn.buk.hotel.entity.HotelInfo hotelInfo1 = hotelDao.getHotelInfoByHotelCode(hotelCode);
+
+                    if (response.getHotelRatePlans() == null || response.getHotelRatePlans().size() == 0) {
+                        if (periodId == 1) {
+                            hotelInfo1.setRatePlanStatus(-1);
+                            hotelDao.updateHotelInfo(hotelInfo1);
                         }
-                        else {
-                            errorCount++;
-                            logger.info(xml);
-                            return "ER#HotelCode is " + hotelCode + ", RatePlanCode is " + hotelRatePlan.getRatePlanCode() + ", rate plan save failed.";
-                        }
-                    } catch (Exception ex) {
-                        errorCount++;
-                        logger.error(ex.getMessage());
-                        return "ER#HotelCode is " + hotelCode + ", rate plan occur exception.";
+                        logger.info("OK#Theres is no rates for {" + hotelCode + "," + periodId + "}.");
+                        //rs = "OK#Theres is no rates.";
+                    } else {
+
+                        cn.buk.hotel.entity.HotelRatePlan hotelRatePlan = null;
+                        for (HotelRatePlan dtoRatePlan : response.getHotelRatePlans()) {
+                            try {
+                                hotelRatePlan = ConvertUtil.convertHotelRatePlan(dtoRatePlan);
+                                hotelRatePlan.setHotelInfo(hotelInfo1);
+                                int retCode = hotelDao.createHotelRatePlan(hotelRatePlan);
+                                if (retCode == 1) {
+                                    //saveCount++;
+                                    //rs = "OK#Save OK";
+                                } else if (retCode == 2) {
+                                    //rs = "OK#already exist.";
+                                    //hotelRatePlan = null;
+                                } else {
+                                    //errorCount++;
+                                    logger.info(xml);
+                                    //return "ER#HotelCode is " + hotelCode + ", RatePlanCode is " + hotelRatePlan.getRatePlanCode() + ", rate plan save failed.";
+                                    return;
+                                }
+                            } catch (Exception ex) {
+                                //errorCount++;
+                                logger.error(ex.getMessage());
+                                return;
+                                //return "ER#HotelCode is " + hotelCode + ", rate plan occur exception.";
+                            }
+                        }  // end for
+                        hotelInfo1.setRatePlanStatus(1);
+                        hotelDao.updateHotelInfo(hotelInfo1);
                     }
-                }  // end for
-                hotelInfo1.setRatePlanStatus(1);
-                hotelDao.updateHotelInfo(hotelInfo1);
+
+                    //int span2 = DateUtil.getPastTime(baseTime1);
+                    //记录cache
+                    CacheRatePlan cacheRatePlan = hotelDao.getCacheRatePlan(hotelCode, periodId);
+                    if (cacheRatePlan == null) {
+                        cacheRatePlan = new CacheRatePlan();
+                        cacheRatePlan.setHotelCode(hotelCode);
+                        cacheRatePlan.setPeriodId(periodId);
+                        hotelDao.createCacheRatePlan(cacheRatePlan);
+                    } else {
+                        cacheRatePlan.setCacheTime(DateUtil.getCurDateTime());
+                        cacheRatePlan.setEndTime(DateUtil.getCurDateTime());
+                        hotelDao.updateCacheRatePlan(cacheRatePlan);
+                    }
+
+                    //int span3 = DateUtil.getPastTime(baseTime1);
+                    //logger.info(String.format("hotel code[%s]: span1=%dms, span2=%dms, span3=%dms", hotelCode, span1, span2, span3));
+                }
+                int spanTotal = DateUtil.getPastTime(baseTime0);
+                logger.info(String.format("total time : %d ms", spanTotal));
+                if (spanTotal > 15000) {
+                    hotelDao.clearAllCache();
+                    logger.warn(String.format("total time(%d ms)>15s, clear hibernate cache.", spanTotal));
+
+                }
+
+                //rs = "OK#" + saveCount + " OK";
+
+                //System.out.println(this +  "(runnable) end.");
             }
+        };
 
-            int span2 = DateUtil.getPastTime(baseTime1);
-            //记录cache
-            CacheRatePlan cacheRatePlan = hotelDao.getCacheRatePlan(hotelCode, periodId);
-            if (cacheRatePlan == null) {
-                cacheRatePlan = new CacheRatePlan();
-                cacheRatePlan.setHotelCode(hotelCode);
-                cacheRatePlan.setPeriodId(periodId);
-                hotelDao.createCacheRatePlan(cacheRatePlan);
-            } else {
-                cacheRatePlan.setCacheTime(DateUtil.getCurDateTime());
-                cacheRatePlan.setEndTime(DateUtil.getCurDateTime());
-                hotelDao.updateCacheRatePlan(cacheRatePlan);
-            }
-
-            int span3 = DateUtil.getPastTime(baseTime1);
-            //logger.info(String.format("hotel code[%s]: span1=%dms, span2=%dms, span3=%dms", hotelCode, span1, span2, span3));
-        }
-        int spanTotal = DateUtil.getPastTime(baseTime0);
-        logger.info(String.format("total time : %d ms", spanTotal));
-        if (spanTotal > 15000) {
-            hotelDao.clearAllCache();
-            logger.warn(String.format("total time(%d ms)>15s, clear hibernate cache.", spanTotal));
-
-        }
-
-        rs = "OK#" + saveCount + " OK";
+        new Thread(thread).start();
+        return "OK#SaveThread has started.";
 
 
-        return rs;
     }
 
 
@@ -886,7 +874,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             Element headerElement = (Element)cacheElement.getValue();
             int accessCount = Integer.parseInt(headerElement.attributeValue("AccessCount"));
             int currentCount = Integer.parseInt(headerElement.attributeValue("CurrentCount"));
-            logger.info("AccessCount=" + headerElement.attributeValue("AccessCount")
+            logger.info(ConfigData.OTA_HotelDetail_Request + "AccessCount=" + headerElement.attributeValue("AccessCount")
                     + ", CurrentCount=" + headerElement.attributeValue("CurrentCount")
                     //+ ", RecentlyTime=" + headerElement.attributeValue("RecentlyTime")
                     + ", ResetTime=" + headerElement.attributeValue("ResetTime"));
@@ -963,6 +951,9 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             return "ER#processHotelDetailResponse";
         }
 
+        int total = DateUtil.getPastTime(date0);
+        logger.info(ConfigData.OTA_HotelDetail_Request + ": total " + total + "ms");
+
         return rs;
     }
 
@@ -1004,10 +995,10 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         if (cacheElement != null) {
             Element headerElement = (Element)cacheElement.getValue();
             int accessCount = Integer.parseInt(headerElement.attributeValue("AccessCount"));
-            int currentCount = Integer.parseInt(headerElement.attributeValue("CurrentCount"));
-            logger.info("AccessCount=" + headerElement.attributeValue("AccessCount")
+            int currentCount = Integer.parseInt(headerElement.attributeValue("CurrentCount")) + 1;
+            logger.info(ConfigData.OTA_HotelRatePlan_Request + " AccessCount=" + headerElement.attributeValue("AccessCount")
                     + ", CurrentCount=" + headerElement.attributeValue("CurrentCount")
-                    + ", RecentlyTime=" + headerElement.attributeValue("RecentlyTime")
+                    //+ ", RecentlyTime=" + headerElement.attributeValue("RecentlyTime")
                     + ", ResetTime=" + headerElement.attributeValue("ResetTime"));
             if (currentCount >= accessCount) {
                 try {
@@ -1019,6 +1010,8 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             }
 
         }
+
+       //System.out.println("searchHotelRatePlan begin");
 
         HotelRequestBody request = new HotelRequestBody();
         request.createHotelRatePlanRequest();
@@ -1092,6 +1085,8 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             return "ER#xml->document";
         }
 
+
+
         try {
             rs = processHotelRatePlanResponse(document, periodId);
         } catch (Exception ex) {
@@ -1099,6 +1094,11 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             logger.info(response);
             return "ER#processHotelRatePlanResponse";
         }
+
+        //Date date0 = DateUtil.getCurDateTime();
+        //String response = execApiRequest(xml, ConfigData.OTA_HotelRatePlan_Url, paraName);
+        int total = DateUtil.getPastTime(date0);
+        logger.info(ConfigData.OTA_HotelRatePlan_Request + ": total " + total + "ms");
 
         return rs;
     }
@@ -1345,7 +1345,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         List<String> hotelCodes1 = new ArrayList<String>();
 
         cn.buk.hotel.entity.HotelInfo hotelInfo;
-        logger.info("hotel total for refreshing rate plan: " + hotelCodes.size());
+        //logger.info("hotel total for refreshing rate plan: " + hotelCodes.size());
 
         boolean bBreak = false;
         int idx = 0;
