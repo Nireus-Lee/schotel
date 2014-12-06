@@ -42,7 +42,7 @@
                 <log4j.file.openapi>e:\\log\\qms.openapi.log</log4j.file.openapi>
 
                 <hibernate.hbm2ddl.auto>update</hibernate.hbm2ddl.auto>
-                <hibernate.show_sql>true</hibernate.show_sql>
+                <hibernate.show_sql>false</hibernate.show_sql>
 
                 <ctrip.openapi.payment.return.url>http://local.buk.cn/Flight/openApiPaymentResult.do</ctrip.openapi.payment.return.url>
                 <ctrip.openapi.payment.show.url>http://local.buk.cn/Flight/viewOrder.do</ctrip.openapi.payment.show.url>
@@ -51,9 +51,10 @@
                 <proxy.host>172.168.1.21</proxy.host>
                 <proxy.port>3128</proxy.port>
 
-                <task.hotel.info.cron>0 0/5 * * * ?</task.hotel.info.cron>
-                <task.cron.expression>0 0 0 * * ?</task.cron.expression>
-                <cache.change.task.cron.expression>0 0 0 * * ?</cache.change.task.cron.expression>
+                <task.hotel.info.cron>0 0 5 * * ?</task.hotel.info.cron>
+                <task.cron.expression>0 0,10,20,30,40,50 * * * ?</task.cron.expression>
+                <task.cache.change.cron>0 5,15,25,35,45,55 * * * ?</task.cache.change.cron>
+                <task.delete.expired.rate.cron>0 0 5 * * ?</task.delete.expired.rate.cron>
             </properties>
 
         </profile>
@@ -80,7 +81,8 @@
 
                 <task.hotel.info.cron>0 0 0/2 * * ?</task.hotel.info.cron>
                 <task.cron.expression>0 0 1 * * ?</task.cron.expression>
-                <cache.change.task.cron.expression>0 0 0/2 * * ?</cache.change.task.cron.expression>
+                <task.cache.change.cron>0 0 0/2 * * ?</task.cache.change.cron>
+                <task.delete.expired.rate.cron>0 0 2 * * ?</task.delete.expired.rate.cron>
 
 
             </properties>
