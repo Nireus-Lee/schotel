@@ -8,11 +8,11 @@ import cn.buk.hotel.entity.*;
 import cn.buk.hotel.sc.HotelSearchCriteria;
 import cn.buk.util.DateUtil;
 import org.apache.log4j.Logger;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.criteria.*;
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -46,17 +46,13 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public HotelInfo getHotelInfoByHotelCode(String hotelCode) {
-        List<HotelInfo> hotelInfos = new ArrayList<HotelInfo>();
 
-        try {
-            hotelInfos = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
-                    .setParameter("hotelCode", hotelCode)
-                    .getResultList();
-        } catch (PersistenceException e) {
-            logger.error(e.getMessage());
-        }
+        HotelInfo hotelInfo = (HotelInfo) getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
+                .setParameter("hotelCode", hotelCode)
+                .getSingleResult();
 
-        return hotelInfos.size() > 0 ? hotelInfos.get(0): null;
+
+        return hotelInfo;
     }
 
     @Override
@@ -106,6 +102,19 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
             retCode = -1;
             logger.error("updateHotelInfo failed: (HotelCode: " + hotelInfo.getHotelCode() + ", HotelName: " + hotelInfo.getHotelName() + ")：" + ex.getMessage());
         }
+        return retCode;
+    }
+
+    @Override
+    @Transactional
+    public int setHotelRatePlanStatusByHotelCode(String hotelCode, int ratePlanStatus) {
+        int retCode = 0;
+
+        retCode = getEm().createQuery("update HotelInfo o set o.ratePlanStatus = :ratePlanStatus where o.hotelCode = :hotelCode")
+                .setParameter("ratePlanStatus", ratePlanStatus)
+                .setParameter("hotelCode", hotelCode)
+                .executeUpdate();
+
         return retCode;
     }
 
@@ -168,6 +177,24 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
                     .getResultList();
             if (ratePlans.size() > 0) {
                 retCode = 2;
+                HotelRatePlan plan0 = ratePlans.get(0);
+                //save rateplan_rate
+                List<HotelRatePlanRate> rates0 = em.createQuery("select o from HotelRatePlanRate o where o.hotelRatePlan = :plan order by o.startDate")
+                        .setParameter("plan", plan0)
+                        .getResultList();
+                for(HotelRatePlanRate rate0: rates0) {
+                    for(HotelRatePlanRate rate: hotelRatePlan.getHotelRatePlanRates()) {
+                        if (rate0.getStartDate().getTime() == rate.getStartDate().getTime()) {
+                            em.remove(rate0);
+                            break;
+                        }
+                    }
+                }
+                em.flush();
+                for(HotelRatePlanRate rate: hotelRatePlan.getHotelRatePlanRates()) {
+                    rate.setHotelRatePlan(plan0);
+                    em.persist(rate);
+                }
             } else {
                 em.persist(hotelRatePlan);
                 retCode = 1;
@@ -274,18 +301,12 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public CacheRatePlan getCacheRatePlan(String hotelCode, int periodId) {
-        List<CacheRatePlan> cacheRatePlans = new ArrayList<CacheRatePlan>();
-        try {
-            //body
-            cacheRatePlans = getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
-                    .setParameter("hotelCode", hotelCode)
-                    .setParameter("periodId", periodId)
-                    .getResultList();
-        } catch (PersistenceException e) {
-            logger.error(e.getMessage());
-        }
+        CacheRatePlan cacheRatePlan = (CacheRatePlan) getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
+                .setParameter("hotelCode", hotelCode)
+                .setParameter("periodId", periodId)
+                .getSingleResult();
 
-        return cacheRatePlans.size() > 0 ? cacheRatePlans.get(0) : null;
+        return cacheRatePlan;
     }
 
     @Override
@@ -435,7 +456,7 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
         try {
             //body
-            rooms = getEm().createQuery("select o from HotelGuestRoom o where o.hotelInfo.id = :hotelId and o.invBlockCode = :roomTypeCode")
+            rooms = getEm().createQuery("select o from HotelGuestRoom o where o.hotelInfo.id = :hotelId and o.roomTypeCode = :roomTypeCode")
                     .setParameter("hotelId", hotelId)
                     .setParameter("roomTypeCode", roomTypeCode)
                     .getResultList();
@@ -546,5 +567,59 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         }
 
         return hotelCodes;
+    }
+
+    @Override
+    public List<String> getHotelCodes4RatePlan(int periodId) {
+        List<String> hotelCodes = new ArrayList<String>();
+
+        try {
+            //body
+            Date date = DateUtil.getCurDate();
+            date = DateUtil.add(date, -7);
+
+            logger.info("[getHotelCodes4RatePlan] " + DateUtil.formatDate(date, "yyyy-MM-dd") + "," + periodId);
+
+            Date baseTime = DateUtil.getCurDateTime();
+            hotelCodes = getEm().createQuery("select h.hotelCode from HotelInfo h where h.ratePlanStatus != -1 and h.hotelCode not in (select o.hotelCode from CacheRatePlan o where o.cacheTime > :date and o.periodId = :periodId) order by h.id")
+                    .setParameter("date", date)
+                    .setParameter("periodId", periodId)
+                    .setMaxResults(5000)
+                    .getResultList();
+            int span = DateUtil.getPastTime(baseTime);
+            logger.info("[getHotelCodes4RatePlan] elapsed time: " + span + " ms, size: " + hotelCodes.size() + ", period id: " + periodId);
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
+
+        return hotelCodes;
+    }
+
+    @Override
+    @Transactional
+    public void deleteExpiredRate() {
+        Date date = DateUtil.getCurDate();
+        date = DateUtil.add(date, -1);
+
+        int count = getEm().createQuery("delete from HotelRatePlanRate r where r.endDate <= :endDate")
+                .setParameter("endDate", date)
+                .executeUpdate();
+
+        logger.info("deleted " + count + " expired rates.");
+    }
+
+    @Override
+    @Transactional
+    public int setCacheRatePlanDone(String hotelCode, int periodId) {
+        int retCode = 0;
+
+        retCode = getEm().createQuery("update CacheRatePlan o set o.cacheTime = :cacheTime, o.endTime = :endTime where o.hotelCode = :hotelCode and o.periodId = :periodId")
+                .setParameter("hotelCode", hotelCode)
+                .setParameter("periodId", periodId)
+                .setParameter("cacheTime", DateUtil.getCurDate())
+                .setParameter("endTime", DateUtil.getCurDateTime())
+                .executeUpdate();
+
+        return retCode;
     }
 }

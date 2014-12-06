@@ -33,8 +33,8 @@ public class CacheRatePlan {
     @Column(name="period_id")
     private int periodId;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date cacheTime= DateUtil.getCurDateTime();
+    @Temporal(TemporalType.DATE)
+    private Date cacheTime= DateUtil.getCurDate();
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(insertable = true, updatable = false)

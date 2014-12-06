@@ -47,13 +47,20 @@
     <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
         <property name="database" value="SQL_SERVER" />
         <property name="databasePlatform" value="org.hibernate.dialect.SQLServer2008Dialect" />
-        <property name="showSql" value="false" />
+        <property name="showSql" value="${hibernate.show_sql}" />
     </bean>
 
     <bean id="emf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="dataSource" ref="dataSource" />
         <property name="jpaVendorAdapter" ref="jpaVendorAdapter" />
         <property name="persistenceUnitName" value="hotel" />
+        <property name="jpaPropertyMap">
+            <map>
+                <entry key="hibernate.connection.release_mode" value="after_transaction"/>
+                <entry key="hibernate.show_sql" value="${hibernate.show_sql}" />
+                <entry key="hibernate.format_sql" value="false"/>
+            </map>
+        </property>
     </bean>
 
     <bean id="jpaDialect" class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
@@ -97,6 +104,15 @@
         </property>
         <property name="concurrent" value="false"/>
     </bean>
+    <bean id="deleteExpiredRateJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">
+            <ref bean="ratePlanTask" />
+        </property>
+        <property name="targetMethod">
+            <value>deleteExpiredRate</value>
+        </property>
+        <property name="concurrent" value="false"/>
+    </bean>
 
     <!-- 配置触发器 -->
     <bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
@@ -112,7 +128,7 @@
             <ref bean="cacheChangeJob" />
         </property>
         <property name="cronExpression">
-            <value>${cache.change.task.cron.expression}</value>
+            <value>${task.cache.change.cron}</value>
         </property>
     </bean>
     <bean id="hotelInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
@@ -123,6 +139,14 @@
             <value>${task.hotel.info.cron}</value>
         </property>
     </bean>
+    <bean id="deleteExpiredRateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="deleteExpiredRateJob" />
+        </property>
+        <property name="cronExpression">
+            <value>${task.delete.expired.rate.cron}</value>
+        </property>
+    </bean>
 
     <bean id="startQuartz" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <!-- 添加触发器 -->
@@ -131,6 +155,7 @@
                 <ref bean="cronTrigger" />
                 <ref bean="cacheChangeTrigger" />
                 <ref bean="hotelInfoTrigger" />
+                <ref bean="deleteExpiredRateTrigger" />
             </list>
         </property>
     </bean>

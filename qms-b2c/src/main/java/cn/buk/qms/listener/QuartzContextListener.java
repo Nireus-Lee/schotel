@@ -28,12 +28,12 @@ public class QuartzContextListener implements ServletContextListener {
                 .getAttribute(
                         WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
 
-        Object obj = webApplicationContext.getBean("startQuertz");
+        Object obj = webApplicationContext.getBean("startQuartz");
         //System.out.println(obj.getClass().getName());
-        org.quartz.impl.StdScheduler startQuertz = (org.quartz.impl.StdScheduler) obj;
-        if(startQuertz != null) {
+        org.quartz.impl.StdScheduler startQuartz = (org.quartz.impl.StdScheduler) obj;
+        if(startQuartz != null) {
             //System.out.println("startQuertz.shutdown();");
-            startQuertz.shutdown();
+            startQuartz.shutdown();
         }
         try {
             Thread.sleep(1000);

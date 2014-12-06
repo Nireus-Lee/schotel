@@ -27,7 +27,7 @@ public class HotelRatePlan {
     private String name;
 
     /**
-     *  RatePlanCode属性：价格计划代码；
+     *  RatePlanCode属性：价格计划代码；对应ctrip子房型 ---> hotelInfo.roomTypeCode
      */
     private int ratePlanCode;
 

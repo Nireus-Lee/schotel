@@ -43,4 +43,10 @@ public class RatePlanTask {
     public void setCtripOpenApiService(CtripOpenApiService ctripOpenApiService) {
         this.ctripOpenApiService = ctripOpenApiService;
     }
+
+    public void deleteExpiredRate() {
+        logger.info("[deleteExpiredRate] begin");
+        ctripOpenApiService.deleteExpiredRate();
+        logger.info("[deleteExpiredRate] end.");
+    }
 }

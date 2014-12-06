@@ -8,8 +8,6 @@
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServer2008Dialect" />
             <property name="hibernate.hbm2ddl.auto" value="update" />
-            <property name="hibernate.show_sql" value="${hibernate.show_sql}" />
-            <property name="hibernate.format_sql" value="false"/>
         </properties>
 	</persistence-unit>
     <persistence-unit name="hotel-console" transaction-type="RESOURCE_LOCAL">

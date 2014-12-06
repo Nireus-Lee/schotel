@@ -26,6 +26,7 @@ public class HotelRatePlanRate {
     private HotelRatePlan hotelRatePlan;
 
     //<!-- Start属性：价格开始时间；End属性：价格结束时间；-->
+    //保存到数据库的时候startDate = endDate，表示当天的价格；如果接口来的数据是一段时间的，那么把它拆分成每天
     @Temporal(TemporalType.DATE)
     private Date startDate;
 

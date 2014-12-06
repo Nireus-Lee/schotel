@@ -29,6 +29,17 @@
 		<filter-name>struts2</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+
+	<servlet>
+		<servlet-name>Admin</servlet-name>
+		<servlet-class>
+			org.logicalcobwebs.proxool.admin.servlet.AdminServlet
+		</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Admin</servlet-name>
+		<url-pattern>/proxool-admin</url-pattern>
+	</servlet-mapping>
 	
 	
 	<!--session-->

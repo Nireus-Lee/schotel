@@ -6,10 +6,10 @@ package cn.buk.hotel.dao;
 
 import cn.buk.hotel.entity.City;
 import org.apache.log4j.Logger;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
-import javax.transaction.Transactional;
 import java.util.List;
 
 

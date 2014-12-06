@@ -11,6 +11,7 @@ import org.apache.struts2.ServletActionContext;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -19,6 +20,10 @@ import java.util.List;
  * Time: 下午3:02
  */
 public class CtripHotelAction extends ActionSupport {
+
+    private String hotelCode;
+    private Date startDate;
+    private Date endDate;
 
     private CtripOpenApiService ctripOpenApiService;
 
@@ -71,9 +76,7 @@ public class CtripHotelAction extends ActionSupport {
     }
 
     public void searchHotelRatePlan()  {
-        List<String> hotelCodes = new ArrayList<String>();
-        hotelCodes.add("457210");
-        String xml = ctripOpenApiService.searchHotelRatePlan(hotelCodes, 1, true);
+        String xml = ctripOpenApiService.searchHotelRatePlan(hotelCode, startDate, endDate);
         writeXmlResponse(xml);
     }
 
@@ -107,5 +110,29 @@ public class CtripHotelAction extends ActionSupport {
 
     public void setCtripOpenApiService(CtripOpenApiService ctripOpenApiService) {
         this.ctripOpenApiService = ctripOpenApiService;
+    }
+
+    public String getHotelCode() {
+        return hotelCode;
+    }
+
+    public void setHotelCode(String hotelCode) {
+        this.hotelCode = hotelCode;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 }

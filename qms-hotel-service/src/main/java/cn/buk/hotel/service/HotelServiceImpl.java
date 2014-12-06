@@ -57,8 +57,8 @@ public class HotelServiceImpl implements HotelService {
         sc.setDistrictId(districtId);
         sc.setZoneId(zoneId);
         List<HotelInfo> hotelInfos = hotelDao.searchAvailableHotel(sc);
-        int span0 = DateUtil.getPastTime(baseTime);
-        logger.info("elapsed time span0: " + span0 + " ms.");
+        //int span0 = DateUtil.getPastTime(baseTime);
+        //logger.info("elapsed time span0: " + span0 + " ms.");
 
         for(HotelInfo hotelInfo: hotelInfos) {
             //
@@ -73,8 +73,8 @@ public class HotelServiceImpl implements HotelService {
             //查找对应的价格计划
             Date baseTime1 = DateUtil.getCurDateTime();
             List<HotelRatePlan> ratePlans = hotelDao.searchAvailableHotelRatePlan(hotelInfo.getId(), checkInDate, checkOutDate);
-            int span3 = DateUtil.getPastTime(baseTime1);
-            logger.info("elapsed time span3: " + span3 + " ms.");
+            //int span3 = DateUtil.getPastTime(baseTime1);
+            //logger.info("elapsed time span3: " + span3 + " ms.");
             for(HotelRatePlan rp: ratePlans) {
                 if (rp.getHotelRatePlanRates() == null || rp.getHotelRatePlanRates().size() == 0) continue;
 
@@ -83,14 +83,10 @@ public class HotelServiceImpl implements HotelService {
                 rpDto.setRatePlanCode(rp.getRatePlanCode());
                 rpDto.setRatePlanName(rp.getName());
 
-                if (rp.getHotelRatePlanSellableProducts() != null && rp.getHotelRatePlanSellableProducts().size() >0) {
-                    if (rp.getHotelRatePlanSellableProducts().size()>1)
-                        logger.warn("rateplan[" + rp.getId() + "] has too many sellable products.");
-
-                    rpDto.setRoomTypeCode(rp.getHotelRatePlanSellableProducts().get(0).getInvCode());
+                    rpDto.setRoomTypeCode(Integer.toString(rp.getRatePlanCode()));
                     HotelGuestRoom room = hotelDao.getHotelRoomInfo(rp.getHotelInfo().getId(), rpDto.getRoomTypeCode());
                     if (room == null)
-                        logger.warn("Do not find room data: " + rp.getHotelInfo().getId() + "," + rpDto.getRoomTypeCode());
+                        logger.error("Do not find room data: " + rp.getHotelInfo().getId() + "," + rpDto.getRoomTypeCode());
                     else {
                         rpDto.setRoomTypeName(room.getRoomTypeName());
                         if (room.getBedTypeCode() != null)
@@ -105,9 +101,6 @@ public class HotelServiceImpl implements HotelService {
                         }
                     }
 
-                } else {
-                    logger.error("rateplan[" + rp.getId() + "] has not sellable products." );
-                }
 
                 //rpDto.setRoomTypeName(rp.getName());
                 int price = 0;
@@ -119,6 +112,8 @@ public class HotelServiceImpl implements HotelService {
 
                 dto.addRatePlan(rpDto);
             }
+            int span4 = DateUtil.getPastTime(baseTime1);
+            //logger.info("elapsed time span4: " + span4 + " ms.");
         }
         int span = DateUtil.getPastTime(baseTime);
         logger.info("total elapsed time: " + span + " ms.");

@@ -19,10 +19,20 @@ public interface HotelDao {
     public HotelInfo getHotelDetailInfoByHotelCode(String hotelCode);
 
     public int updateHotelInfo(HotelInfo hotelInfo);
+    public int setHotelRatePlanStatusByHotelCode(String hotelCode, int ratePlanStatus);
 
     public List<HotelInfo> getAllHotelInfo();
     public List<String> getAllHotelCodes();
     public List<String> getAllHotelCodesByCityId(int cityId);
+    public List<String> getAllHotelCodes2();
+
+    /**
+     * 需要获取rateplan的酒店代码
+     * @param periodId
+     * @return
+     */
+    public List<String> getHotelCodes4RatePlan(final int periodId);
+
 
 
     public int createHotelRatePlan(HotelRatePlan hotelRatePlan);
@@ -68,7 +78,10 @@ public interface HotelDao {
 
     public int createCacheHotelCacheChange(CacheHotelCacheChange cacheHotelCacheChange);
 
-    public List<String> getAllHotelCodes2();
 
 
+    public void deleteExpiredRate();
+
+
+    public int setCacheRatePlanDone(String hotelCode, int periodId);
 }

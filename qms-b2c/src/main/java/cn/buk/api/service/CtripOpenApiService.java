@@ -38,6 +38,8 @@ public interface CtripOpenApiService {
      * @return
      */
     public String searchHotelRatePlan(List<String> hotelCodes, int periodId, boolean returnXml);
+    public String searchHotelRatePlan(String hotelCode, Date startDate, Date endDate);
+    //public String execSearchHotelRatePlan(List<String> hotelCodes, Date startDate, Date endDate);
     public String importHotelRatePlanResponse(String filename);
 
     public String searchHotelCacheChange();
@@ -50,8 +52,6 @@ public interface CtripOpenApiService {
     public String refreshAllHotelBasicInfo();
     public String refreshAllHotelDetail();
     public String refreshAllRatePlan();
-    public String refreshRatePlans(List<String> hotelCodes);
-    public String refreshRatePlansByCityId(int cityId);
 
     /**
      *价格缓存变化查询
@@ -60,4 +60,8 @@ public interface CtripOpenApiService {
     public String refreshHotelCacheChange();
 
     public String calculateSignature(String timestamp, String requestType);
+
+    public void deleteExpiredRate();
+
+
 }

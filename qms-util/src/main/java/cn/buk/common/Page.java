@@ -56,5 +56,7 @@ public class Page {
         this.pageTotal = y;
         if (x >= 1) this.pageTotal++;
 
+        if (this.pageNo > this.pageTotal) this.pageNo = 1;
+
     }
 }

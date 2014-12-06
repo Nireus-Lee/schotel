@@ -36,9 +36,4 @@ public class ConfigData {
     public static String XML_AIRPORT_FILE = "xml_airport";
     public static String XML_TERMINAL_FILE = "xml_terminal";
     public static String XML_CARRIER_FILE="xml_carrier";
-
-
-    public static String HOTEL_CODES_WAITING_FOR_RATE_PLAN = "hotel_codes_waiting_for_rate_plan";
-
-
 }
