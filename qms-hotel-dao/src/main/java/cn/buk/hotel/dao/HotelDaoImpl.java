@@ -47,9 +47,16 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     @Override
     public HotelInfo getHotelInfoByHotelCode(String hotelCode) {
 
-        HotelInfo hotelInfo = (HotelInfo) getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
-                .setParameter("hotelCode", hotelCode)
-                .getSingleResult();
+        HotelInfo hotelInfo = null;
+
+        try {
+            hotelInfo = (HotelInfo) getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
+                    .setParameter("hotelCode", hotelCode)
+                    .getSingleResult();
+        } catch (Exception ex) {
+            logger.error(hotelCode + " cannot be found in entity hotelInfo.");
+            ex.printStackTrace();
+        }
 
 
         return hotelInfo;
