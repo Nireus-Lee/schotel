@@ -42,7 +42,6 @@ public interface CtripOpenApiService {
     //public String execSearchHotelRatePlan(List<String> hotelCodes, Date startDate, Date endDate);
     public String importHotelRatePlanResponse(String filename);
 
-    public String searchHotelCacheChange();
     public String importHotelCacheChangeResponse(String filename);
 
     /**
@@ -61,7 +60,8 @@ public interface CtripOpenApiService {
 
     public String calculateSignature(String timestamp, String requestType);
 
-    public void deleteExpiredRate();
-
-
+    /**
+     * 获取hotelCacheChange的具体内容
+     */
+    public void retrieveHotelCacheChangeDetail();
 }

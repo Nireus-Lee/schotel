@@ -387,14 +387,12 @@ public class DateUtil {
         return c.getTime();
     }
 
-    public static Date getDateOnTheHour(Date date) {
-
+    public static Date getDateOnMinute(Date date) {
         Calendar c = Calendar.getInstance();
         c.clear();
         c.setTime(date);
         c.clear(Calendar.MILLISECOND);
         c.clear(Calendar.SECOND);
-        c.clear(Calendar.MINUTE);
         return c.getTime();
     }
 }

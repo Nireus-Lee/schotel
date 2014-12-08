@@ -33,6 +33,11 @@
             <result type="plainText"></result>
         </action>
 
+        <action name="openApiRefreshHotelCacheChangeDetail" class="cn.buk.api.action.CtripHotelAction" method="refreshHotelCacheChangeDetail">
+            <result type="plainText"></result>
+        </action>
+
+
 
     </package>
 </struts>

@@ -68,6 +68,12 @@ public class CtripHotelAction extends ActionSupport {
         writeResponse(response);
     }
 
+    public void searchHotelCacheChange() {
+        ctripOpenApiService.refreshHotelCacheChange();
+        ctripOpenApiService.retrieveHotelCacheChangeDetail();
+        writeResponse("OK");
+    }
+
     public void searchHotelDetail() {
         String hotelCode = "";
         List<String> hotelCodes = new ArrayList<String>();
@@ -87,11 +93,6 @@ public class CtripHotelAction extends ActionSupport {
         writeResponse(response);
     }
 
-    public void searchHotelCacheChange()  {
-        String xml = ctripOpenApiService.searchHotelCacheChange();
-        writeXmlResponse(xml);
-    }
-
     public void refreshAllHotelBasicInfo() {
         String xml = ctripOpenApiService.refreshAllHotelBasicInfo();
         writeXmlResponse(xml);
@@ -100,6 +101,11 @@ public class CtripHotelAction extends ActionSupport {
     public void refreshAllHotelDetail() {
         String xml = ctripOpenApiService.refreshAllHotelDetail();
         writeXmlResponse(xml);
+    }
+
+    public void refreshHotelCacheChangeDetail() {
+        ctripOpenApiService.retrieveHotelCacheChangeDetail();
+        writeXmlResponse("OK");
     }
 
     public void refreshAllRatePlan() {

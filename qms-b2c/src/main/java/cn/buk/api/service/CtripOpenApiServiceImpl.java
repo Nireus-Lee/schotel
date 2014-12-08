@@ -28,7 +28,6 @@ import org.dom4j.*;
 import org.dom4j.io.DocumentResult;
 import org.dom4j.io.SAXReader;
 
-import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -37,9 +36,7 @@ import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.SocketAddress;
-import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -51,9 +48,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
-    private static Logger logger = Logger.getLogger(CtripOpenApiServiceImpl.class);
-    private static int cacheHits;
-    private static int cacheMisses;
+    private static final Logger logger = Logger.getLogger(CtripOpenApiServiceImpl.class);
+    // --Commented out by Inspection (2014-12-8 22:38):private static int cacheHits;
+    // --Commented out by Inspection (2014-12-8 22:39):private static int cacheMisses;
 
     private String allianceId;
     private String sid;
@@ -65,16 +62,18 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
     private int intervalCacheChange;
 
     // 声明一个容量为50的缓存队列
-    private BlockingQueue<DocumentDto> ratePlanQueue = new LinkedBlockingQueue<DocumentDto>(50);
+    private final BlockingQueue<DocumentDto> ratePlanQueue = new LinkedBlockingQueue<DocumentDto>(50);
 
-    private BlockingQueue<DocumentDto> hotelCacheChangeQueue = new LinkedBlockingQueue<DocumentDto>(200);
+    private final BlockingQueue<DocumentDto> hotelCacheChangeQueue = new LinkedBlockingQueue<DocumentDto>(200);
 
-    private CacheManager cacheManager = CacheManager.getInstance();
+    private final BlockingQueue<HotelRatePlanRequestDto> ratePlanRequestQueue = new LinkedBlockingQueue<HotelRatePlanRequestDto>(200);
+
+    private static final CacheManager cacheManager = CacheManager.getInstance();
 
     private CityDao cityDao;
     private HotelDao hotelDao;
 
-    private Cache getCache() {
+    private static Cache getCache() {
         Cache cache = cacheManager.getCache("openApiCache");
         if (cache == null) {
             cacheManager.addCache("openApiCache");
@@ -84,7 +83,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         return cache;
     }
 
-    private String execApiRequest(String requestContent, String urlString, String paraName) {
+    private static String execApiRequest(String requestContent, String urlString, String paraName) {
         Proxy proxy = null;
         String proxyUsed = (String)PropertiesUtil.pps.get(AppConfig.PROXY_USED);
         if (proxyUsed.equalsIgnoreCase("1")){
@@ -96,9 +95,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             proxy = new Proxy(Proxy.Type.HTTP, address);
         }
 
-        HttpAccessAdapter httpAccessAdapter = new HttpAccessAdapter();
-        String response = httpAccessAdapter.SendRequestToUrl(requestContent, urlString, paraName, proxy);
-        return response;
+        return HttpAccessAdapter.SendRequestToUrl(requestContent, urlString, paraName, proxy);
     }
 
     private Element createRequestHeaderElement(Document document, String requestType) {
@@ -125,15 +122,14 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         SAXReader reader = new SAXReader();
 
         File file = new File(filename);
-        if (file.exists() == false) return "not exist.";
-        Document document = null;// 读取XML文件
+        if (!file.exists()) return "not exist.";
+        Document document;// 读取XML文件
         try {
             document = reader.read(file);
         } catch (DocumentException e) {
             e.printStackTrace();
             return "error";
         }
-        Element rootElement = document.getRootElement();
 
         List flightDataList = document.selectNodes("//CityDetails/*");
         List<City> cities = new ArrayList<City>();
@@ -172,19 +168,17 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         SAXReader reader = new SAXReader();
 
         File file = new File(filename);
-        if (file.exists() == false) return "not exist.";
-        Document document = null;// 读取XML文件
+        if (!file.exists()) return "not exist.";
+        Document document;// 读取XML文件
         try {
             document = reader.read(file);
         } catch (DocumentException e) {
             e.printStackTrace();
             return "error";
         }
-        Element rootElement = document.getRootElement();
 
         List list = document.selectNodes("//LocationDetails/*");
         List<District> districts = new ArrayList<District>();
-        String temp;
         for (Iterator it = list.iterator(); it.hasNext(); ) {
             Element element = (Element) it.next();
 
@@ -211,19 +205,17 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         SAXReader reader = new SAXReader();
 
         File file = new File(filename);
-        if (file.exists() == false) return "not exist.";
-        Document document = null;// 读取XML文件
+        if (!file.exists()) return "not exist.";
+        Document document;// 读取XML文件
         try {
             document = reader.read(file);
         } catch (DocumentException e) {
             e.printStackTrace();
             return "error";
         }
-        Element rootElement = document.getRootElement();
 
         List list = document.selectNodes("//ZoneDetails/*");
         List<Zone> zones = new ArrayList<Zone>();
-        String temp;
         int maxLength = 0;
         for (Iterator it = list.iterator(); it.hasNext(); ) {
             Element element = (Element) it.next();
@@ -254,8 +246,8 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
     /**
      * 搜索指定城市的酒店信息
-     * @param cityId
-     * @return
+     * @param cityId 城市编号
+     * @return 搜索的结果状态
      */
     @Override
     public String searchHotel(int cityId) {
@@ -287,7 +279,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         HotelRequestBody request = new HotelRequestBody();
         request.createHotelRequestRQ();
         request.getHotelRequestRQ().getCriteria().getCriterion().getHotelRef().setHotelCityCode(cityId);
-        String xml = "";
+        String xml;
 
         try {
             JAXBContext jc = JAXBContext.newInstance(HotelRequestBody.class);
@@ -320,7 +312,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         //处理结果
         SAXReader reader = new SAXReader();
 
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(new StringReader(response));
             response = processHotelSearchResponse(document);
@@ -332,12 +324,14 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         return response;
     }
 
+
+
     private String processHotelSearchResponse(Document document) {
         if (document == null) return "ER#Document is null.";
 
         Element rootElement = document.getRootElement();
         Element headerElement = rootElement.element("Header");
-        if (headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success") == false) {
+        if (!headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success")) {
             //logger.info("Header::ResultCode: " + headerElement.attribute("ResultCode").getValue());
             return "ER#ResultCode is not Success.";
         }
@@ -368,16 +362,12 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
 
         // return response;
-        String rs = "OK," + response.getHotelInfos().size() + " hotels,";
+        String rs;
         int saveCount = 0;
         int count = 0;
         for(HotelInfo hotelInfo: response.getHotelInfos()) {
-            date0 = DateUtil.getCurDateTime();
             cn.buk.hotel.entity.HotelInfo hotelInfo1 = ConvertUtil.convertHotelInfo(hotelInfo);
-            int spanMilliSeconds1 = DateUtil.getPastTime(date0);
-            date0 = DateUtil.getCurDateTime();
             int retCode = hotelDao.createHotelInfo(hotelInfo1);
-            int spanMilliSeconds2 = DateUtil.getPastTime(date0);
 
             if ( retCode == 1 || retCode == 2) {
                 saveCount++;
@@ -407,7 +397,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
         Element rootElement = document.getRootElement();
         Element headerElement = rootElement.element("Header");
-        if (headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success") == false) {
+        if (!headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success")) {
             return "ER#ResultCode is not Success.";
         }
 
@@ -415,7 +405,6 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         getCache().put(new net.sf.ehcache.Element(ConfigData.OTA_HotelDetail_Request, headerElement));
 
         //此处需要在指定的命名空间里面才能找到
-        Namespace ns = new Namespace("", "http://www.opentravel.org/OTA/2003/05");
         Map uris = new HashMap();
         uris.put("ns", "http://www.opentravel.org/OTA/2003/05");
         XPath xpath = document.createXPath("//ns:HotelDescriptiveContents/*");
@@ -433,30 +422,19 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         xs.processAnnotations(HotelDescriptiveContent.class);
 
         String xml;
-        Date baseTime;
-        int span1, span2, span3, span4, span5, span6, span7, span8;
+
         cn.buk.hotel.entity.HotelInfo hotelInfo1;
         String hotelCode, hotelName;
         for (Iterator it = myNodes.iterator(); it.hasNext(); ) {
-            baseTime = DateUtil.getCurDateTime();
             Element element = (Element) it.next();
 
             xml =  element.asXML();
             HotelDescriptiveContent response = (HotelDescriptiveContent)xs.fromXML(xml);
-            span1 = DateUtil.getPastTime(baseTime);
-
-            rs += ";" + response.getHotelName();
 
             hotelCode = response.getHotelCode();
             hotelName = response.getHotelName();
             hotelInfo1 = hotelDao.getHotelDetailInfoByHotelCode(hotelCode);
-            span2 = DateUtil.getPastTime(baseTime);
-            span3 = 0;
-            span4 = 0;
-            span5 = 0;
-            span6 = 0;
-            span7 = 0;
-            span8 = 0;
+
             if (hotelInfo1 == null) {
                 rs = "ER#Not found hotelCode(" + hotelCode + ")";
                 return  rs;
@@ -597,43 +575,32 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                         }
                     }
                 }
-                //MultimediaDescriptions
-                span3 = DateUtil.getPastTime(baseTime);
+
 
                 //save
-                Date date0 = DateUtil.getCurDateTime();
                 int retCode = hotelDao.updateHotelInfo(hotelInfo1);
-                int spanTime3 = DateUtil.getPastTime(date0);
-                //logger.info("HotelCode[" + hotelCode + "]: 保存耗时　" + spanTime3 + "ms, retCode=" + retCode);
-                span4 = DateUtil.getPastTime(baseTime);
+
+
                 if (retCode == 1) {
                     rs = "OK#Save OK";
                     //记录cache
                     CacheHotel cacheHotel = hotelDao.getCacheHotel(hotelCode);
-                    span6 = DateUtil.getPastTime(baseTime);
+
                     if (cacheHotel == null) {
                         cacheHotel = new CacheHotel();
                         cacheHotel.setHotelCode(hotelCode);
-                        span7 = 0;
-                        if (hotelDao.createCacheHotel(cacheHotel) == 1) {
-                            //logger.info("new cacheHotel is ok. -- " + cacheHotel.getHotelCode());
-                            span7 = DateUtil.getPastTime(baseTime);
-                        }
+
+                        hotelDao.createCacheHotel(cacheHotel);
                     } else {
                         cacheHotel.setCacheTime(DateUtil.getCurDateTime());
                         hotelDao.updateCacheHotel(cacheHotel);
-                        span7 = DateUtil.getPastTime(baseTime);
                     }
-
                 }  else {
                     logger.info(xml);
                     rs = "ER#Save Status is " + retCode + " for hotelCode[" + hotelCode + "]";
                     return rs;
                 }
             }
-            int spanTotal = DateUtil.getPastTime(baseTime);
-            //logger.info(String.format("HotelCode[%s] total=%dms, span4=%d, span5=%d, span6=%d, span7=%d, span8=%d", hotelCode, spanTotal, span4, span5, span6, span7, span8));
-
         }  //end for
 
         return rs;
@@ -655,7 +622,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         Date baseTime0 = DateUtil.getCurDateTime();
         for (Iterator it = myNodes.iterator(); it.hasNext(); ) {
             Element element = (Element) it.next();
-            if (element.getName().equalsIgnoreCase("RatePlans") == false) continue;
+            if (!element.getName().equalsIgnoreCase("RatePlans")) continue;
 
             XStream xs = new XStream();
             xs.alias("RatePlans", HotelRatePlans.class);
@@ -665,7 +632,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             HotelRatePlans response = (HotelRatePlans) xs.fromXML(xml);
 
             String hotelCode = response.getHotelCode();
-            cn.buk.hotel.entity.HotelInfo hotelInfo1 = null;
+            cn.buk.hotel.entity.HotelInfo hotelInfo1;
 
             if (response.getHotelRatePlans() == null || response.getHotelRatePlans().size() == 0) {
                 if (periodId == 1) {
@@ -673,13 +640,13 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 }
                 logger.info("OK#Theres is no rates for {" + hotelCode + "," + periodId + "}.");
             } else {
-                cn.buk.hotel.entity.HotelRatePlan hotelRatePlan = null;
+                cn.buk.hotel.entity.HotelRatePlan hotelRatePlan;
                 hotelInfo1 = hotelDao.getHotelInfoByHotelCode(hotelCode);
                 for (HotelRatePlan dtoRatePlan : response.getHotelRatePlans()) {
                     try {
                         hotelRatePlan = ConvertUtil.convertHotelRatePlan(dtoRatePlan);
                         hotelRatePlan.setHotelInfo(hotelInfo1);
-                        int retCode = 0;
+                        int retCode;
 
                         retCode = hotelDao.createHotelRatePlan(hotelRatePlan);
                         if (retCode != 1 && retCode != 2) {
@@ -696,48 +663,40 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             }
 
             //记录cache
-            hotelDao.setCacheRatePlanDone(hotelCode, periodId);
+            if (periodId > 0)
+                hotelDao.setCacheRatePlanDone(hotelCode, periodId);
         }
         int spanTotal = DateUtil.getPastTime(baseTime0);
         logger.info(String.format("total time : %d ms", spanTotal));
-        if (spanTotal > 15000) {
-            hotelDao.clearAllCache();
-            logger.warn(String.format("total time(%d ms)>15s, clear hibernate cache.", spanTotal));
-        }
-
     }
 
 
     /**
      * 处理HotelRatePlanResponse的结果
-     * @param document
-     * @return
+     * @param document 要处理的文档
+     * @return 处理结果状态
      */
     private String processHotelRatePlanResponse(final Document document, final int periodId) {
         if (document == null) return "ER#Document is null.";
 
         Element rootElement = document.getRootElement();
         Element headerElement = rootElement.element("Header");
-        if (headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success") == false) {
+        if (!headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success")) {
             logger.error("ER#ResultCode is not Success.");
             logger.error(document.asXML());
             return "ER#ResultCode is not Success.";
         }
-
-        //放置到缓存，用于记录header中的参数
-        getCache().put(new net.sf.ehcache.Element(ConfigData.OTA_HotelRatePlan_Request, headerElement));
 
         DocumentDto documentDto = new DocumentDto();
         documentDto.setDocument(document);
         documentDto.setPeriodId(periodId);
 
         try {
-            logger.info("Current Queue\'s size: " + ratePlanQueue.size());
+            logger.info("Current ratePlanQueue\'s size: " + ratePlanQueue.size());
             ratePlanQueue.put(documentDto);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
 
         return "OK#Document has been added to Queue.";
     }
@@ -748,7 +707,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
         Element rootElement = document.getRootElement();
         Element headerElement = rootElement.element("Header");
-        if (headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success") == false) {
+        if (!headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success")) {
             return "ER#ResultCode is not Success.";
         }
 
@@ -758,7 +717,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         DocumentDto documentDto = new DocumentDto();
         documentDto.setDocument(document);
         try {
-            logger.info("Current hotelCacheChangeQueue\'s size is " + hotelCacheChangeQueue.size());
+            logger.debug("Current hotelCacheChangeQueue\'s size is " + hotelCacheChangeQueue.size());
             hotelCacheChangeQueue.put(documentDto);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -769,15 +728,15 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
     }
     @Override
     public String importHotelSearchRS(String filename) {
-        String rs = "HAHA";
+        String rs;
         SAXReader reader = new SAXReader();
 
                logger.info("filename: " + filename);
 
         File file = new File(filename);
-        if (file.exists() == false) return null;
+        if (!file.exists()) return null;
 
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(file);
         } catch (DocumentException e) {
@@ -826,7 +785,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             request.getHotelDetailRequest().getHotelDescriptiveInfos().add(hotelDescriptiveInfo);
         }
 
-        String xml = "";
+        String xml;
 
         try {
             JAXBContext jc = JAXBContext.newInstance(HotelRequestBody.class);
@@ -865,7 +824,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         //处理结果
         String rs;
         SAXReader reader = new SAXReader();
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(new StringReader(response));
         } catch (DocumentException e) {
@@ -895,12 +854,12 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         logger.info("filename: " + filename);
 
         File file = new File(filename);
-        if (file.exists() == false) {
+        if (!file.exists()) {
             rs = "ER#File is not existed.";
             return rs;
         }
 
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(file);
         } catch (DocumentException e) {
@@ -923,14 +882,13 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         if (maxDay > 90) maxDay = 90;
         Date startDate = DateUtil.add(DateUtil.getCurDate(), minDay);
         Date endDate = DateUtil.add(DateUtil.getCurDate(), maxDay);
-        Date date0 = DateUtil.getCurDateTime();
 
         String response =  execSearchHotelRatePlan(hotelCodes, startDate, endDate);
 
         //处理结果
         String rs;
         SAXReader reader = new SAXReader();
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(new StringReader(response));
         } catch (DocumentException e) {
@@ -946,9 +904,6 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             return "ER#processHotelRatePlanResponse";
         }
 
-        int total = DateUtil.getPastTime(date0);
-        logger.info(ConfigData.OTA_HotelRatePlan_Request + ": total " + total + "ms");
-
         return rs;
     }
 
@@ -961,7 +916,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         //处理结果
         String rs="rs";
         SAXReader reader = new SAXReader();
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(new StringReader(response));
         } catch (DocumentException e) {
@@ -973,86 +928,28 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
         Element rootElement = document.getRootElement();
         Element headerElement = rootElement.element("Header");
-        if (headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success") == false) {
+        if (!headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success")) {
             logger.error("ER#ResultCode is not Success.");
             logger.error(document.asXML());
             return "ER#ResultCode is not Success.";
         }
 
-        //放置到缓存，用于记录header中的参数
-        getCache().put(new net.sf.ehcache.Element(ConfigData.OTA_HotelRatePlan_Request, headerElement));
-
-
-        //此处需要在指定的命名空间里面才能找到
-        Map uris = new HashMap();
-        uris.put("ns", "http://www.opentravel.org/OTA/2003/05");
-        XPath xpath = document.createXPath("//ns:OTA_HotelRatePlanRS/*");
-        xpath.setNamespaceURIs(uris);
-        List myNodes = xpath.selectNodes(document);
-
-        if (myNodes.size() == 0) {
-            logger.warn("myNodes.size() = 0");
-            return "myNodes.size() = 0";
-        }
-
-        Date baseTime0 = DateUtil.getCurDateTime();
-        for (Iterator it = myNodes.iterator(); it.hasNext(); ) {
-            Element element = (Element) it.next();
-            if (element.getName().equalsIgnoreCase("RatePlans") == false) continue;
-
-            XStream xs = new XStream();
-            xs.alias("RatePlans", HotelRatePlans.class);
-            xs.processAnnotations(HotelRatePlans.class);
-
-            String xml = element.asXML();
-            HotelRatePlans plans = (HotelRatePlans) xs.fromXML(xml);
-
-            //String hotelCode = response.getHotelCode();
-            cn.buk.hotel.entity.HotelInfo hotelInfo1 = null;
-
-            if (plans.getHotelRatePlans() == null || plans.getHotelRatePlans().size() == 0) {
-
-                logger.info("OK#Theres is no rates for {" + hotelCode + "}.");
-            } else {
-                cn.buk.hotel.entity.HotelRatePlan hotelRatePlan = null;
-                hotelInfo1 = hotelDao.getHotelInfoByHotelCode(hotelCode);
-                for (HotelRatePlan dtoRatePlan : plans.getHotelRatePlans()) {
-                    try {
-                        hotelRatePlan = ConvertUtil.convertHotelRatePlan(dtoRatePlan);
-                        hotelRatePlan.setHotelInfo(hotelInfo1);
-                        int retCode = 0;
-
-                        retCode = hotelDao.createHotelRatePlan(hotelRatePlan);
-                        if (retCode != 1 && retCode != 2) {
-                            logger.info(xml);
-                            return "ER";
-                        }
-                    } catch (Exception ex) {
-                        logger.error(ex.getMessage());
-                        return ex.getMessage();
-                    }
-                }  // end for
-                hotelInfo1.setRatePlanStatus(1);
-                hotelDao.updateHotelInfo(hotelInfo1);
-            }
-        }
-        int spanTotal = DateUtil.getPastTime(baseTime0);
-        logger.info(String.format("total time : %d ms", spanTotal));
-        if (spanTotal > 15000) {
-            hotelDao.clearAllCache();
-            logger.warn(String.format("total time(%d ms)>15s, clear hibernate cache.", spanTotal));
-        }
+        processHotelRatePlanResponse(document, 0);
+        //processHotelRatePlanResponse
 
 
         return rs;
     }
 
-    //@Override
-    private String execSearchHotelRatePlan(List<String> hotelCodes, Date startDate, Date endDate) {
+
+
+    private static synchronized String doSearchHotelRatePlan(String requestXml) {
+
+        logger.info("doSearchHotelRatePlan begin..." + Thread.currentThread().getName());
+
         //检查缓存，看看header节点中的API调用频率限制
-        Cache cache = getCache();
         String cacheKey = ConfigData.OTA_HotelRatePlan_Request;
-        net.sf.ehcache.Element cacheElement = cache.get(cacheKey);
+        net.sf.ehcache.Element cacheElement = getCache().get(cacheKey);
         if (cacheElement != null) {
             Element headerElement = (Element)cacheElement.getValue();
             int accessCount = Integer.parseInt(headerElement.attributeValue("AccessCount"));
@@ -1069,62 +966,127 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 }
             }
         }
+        Date date0 = DateUtil.getCurDateTime();
+
+        String response = execApiRequest(requestXml, ConfigData.OTA_HotelRatePlan_Url, "requestXML");
+
+        int apiElapsedTime = DateUtil.getPastTime(date0);
+        logger.info(ConfigData.OTA_HotelRatePlan_Request + ": api耗时 " + apiElapsedTime + "ms");
+
+        //处理结果
+        try {
+            SAXReader reader = new SAXReader();
+            Document document = reader.read(new StringReader(response));
+            Element rootElement = document.getRootElement();
+            Element headerElement = rootElement.element("Header");
+            if (headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success")) {
+                //放置到缓存，用于记录header中的参数
+                logger.debug("put headerElement to cache by key " + ConfigData.OTA_HotelRatePlan_Request);
+                getCache().put(new net.sf.ehcache.Element(ConfigData.OTA_HotelRatePlan_Request, headerElement));
+            } else {
+                logger.error("ResultCode is not Success.");
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+
+        logger.info("doSearchHotelRatePlan end..." + Thread.currentThread().getName());
+
+        return response;
+    }
+
+    private RatePlanRequest createRatePlanRequest(String hotelCode, Date startDate, Date endDate) {
+        RatePlanHotelRef ratePlanHotelRef = new RatePlanHotelRef();
+        ratePlanHotelRef.setHotelCode(hotelCode);
+        RatePlanCandidate ratePlanCandidate = new RatePlanCandidate();
+        ratePlanCandidate.getRatePlanHotelRefs().add(ratePlanHotelRef);
+
+        DateRange ratePlanDateRange = new DateRange();
+        ratePlanDateRange.setStartDate(DateUtil.formatDate(startDate, "yyyy-MM-dd"));
+        ratePlanDateRange.setEndDate(DateUtil.formatDate(endDate, "yyyy-MM-dd"));
+
+        RatePlanRequest ratePlanRequest = new RatePlanRequest();
+        ratePlanRequest.getHotelRatePlanCandidates().add(ratePlanCandidate);
+        ratePlanRequest.setDateRange(ratePlanDateRange);
+
+        return ratePlanRequest;
+    }
+
+    private String execSearchHotelRatePlan(List<HotelRatePlanRequestDto> requestDtos) {
         HotelRequestBody request = new HotelRequestBody();
         request.createHotelRatePlanRequest();
 
-        for(String hotelCode: hotelCodes) {
-            RatePlanHotelRef ratePlanHotelRef = new RatePlanHotelRef();
-            ratePlanHotelRef.setHotelCode(hotelCode);
-            RatePlanCandidate ratePlanCandidate = new RatePlanCandidate();
-            ratePlanCandidate.getRatePlanHotelRefs().add(ratePlanHotelRef);
+        String hotelCode;
+        Date startDate;
+        Date endDate;
+        for(HotelRatePlanRequestDto dto: requestDtos) {
+            hotelCode = dto.getHotelCode();
+            startDate = dto.getStartDate();
+            endDate = dto.getEndDate();
 
-            DateRange ratePlanDateRange = new DateRange();
-            ratePlanDateRange.setStartDate(DateUtil.formatDate(startDate, "yyyy-MM-dd"));
-            ratePlanDateRange.setEndDate(DateUtil.formatDate(endDate, "yyyy-MM-dd"));
-
-            RatePlanRequest ratePlanRequest = new RatePlanRequest();
-            ratePlanRequest.getHotelRatePlanCandidates().add(ratePlanCandidate);
-            ratePlanRequest.setDateRange(ratePlanDateRange);
+            RatePlanRequest ratePlanRequest = createRatePlanRequest(hotelCode, startDate, endDate);
 
             request.getHotelRatePlaneRequest().getRatePlanRequests().add(ratePlanRequest);
         }
 
-        String xml = "";
+        String xml;
 
         try {
-            JAXBContext jc = JAXBContext.newInstance(HotelRequestBody.class);
-
-            Marshaller m = jc.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            m.setProperty(Marshaller.JAXB_ENCODING, "utf-8");
-            m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
-
-            DocumentResult documentResult = new DocumentResult();
-            m.marshal(request, documentResult);
-
-            org.dom4j.Document document = documentResult.getDocument();
-            org.dom4j.Element requestElement = document.getRootElement();
-
-            org.dom4j.Document doc1 = DocumentHelper.createDocument();
-
-            org.dom4j.Element rootElement = createRequestHeaderElement(doc1, ConfigData.OTA_HotelRatePlan_Request);
-            rootElement.add(requestElement);
-
-            xml = doc1.asXML();
-
+           xml = createXml4HotelRequestBody(request, ConfigData.OTA_HotelRatePlan_Request);
         } catch (Exception e) {
             e.printStackTrace();
             return "ER#request xml is wrong.";
         }
         logger.debug(xml);
-        String paraName = "requestXML";
-
-        Date date0 = DateUtil.getCurDateTime();
-        String response = execApiRequest(xml, ConfigData.OTA_HotelRatePlan_Url, paraName);
+        String response = doSearchHotelRatePlan(xml);
         logger.debug(response);
 
-        int apiElapsedTime = DateUtil.getPastTime(date0);
-        logger.info(ConfigData.OTA_HotelRatePlan_Request + ": api耗时 " + apiElapsedTime + "ms");
+        return response;
+    }
+
+    private String createXml4HotelRequestBody(HotelRequestBody request, String requestType) throws JAXBException {
+        JAXBContext jc = JAXBContext.newInstance(HotelRequestBody.class);
+
+        Marshaller m = jc.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        m.setProperty(Marshaller.JAXB_ENCODING, "utf-8");
+        m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+
+        DocumentResult documentResult = new DocumentResult();
+        m.marshal(request, documentResult);
+
+        org.dom4j.Document document = documentResult.getDocument();
+        org.dom4j.Element requestElement = document.getRootElement();
+
+        org.dom4j.Document doc1 = DocumentHelper.createDocument();
+
+        org.dom4j.Element rootElement = createRequestHeaderElement(doc1, requestType);
+        rootElement.add(requestElement);
+
+        return doc1.asXML();
+    }
+
+    private String execSearchHotelRatePlan(List<String> hotelCodes, Date startDate, Date endDate) {
+
+        HotelRequestBody request = new HotelRequestBody();
+        request.createHotelRatePlanRequest();
+
+        for(String hotelCode: hotelCodes) {
+            RatePlanRequest ratePlanRequest = createRatePlanRequest(hotelCode, startDate, endDate);
+            request.getHotelRatePlaneRequest().getRatePlanRequests().add(ratePlanRequest);
+        }
+
+        String xml;
+
+        try {
+            xml = createXml4HotelRequestBody(request, ConfigData.OTA_HotelRatePlan_Request);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "ER#request xml is wrong.";
+        }
+        logger.debug(xml);
+        String response = doSearchHotelRatePlan(xml);
+        logger.debug(response);
 
         return response;
     }
@@ -1136,15 +1098,15 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
     @Override
     public String importHotelRatePlanResponse(String filename) {
-        String rs = "HAHA";
+        String rs;
         SAXReader reader = new SAXReader();
 
         logger.info("filename: " + filename);
 
         File file = new File(filename);
-        if (file.exists() == false) return null;
+        if (!file.exists()) return null;
 
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(file);
         } catch (DocumentException e) {
@@ -1160,7 +1122,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         return rs;
     }
 
-    private String searchHotelCacheChange(int cityId) {
+    private String searchHotelCacheChange(int cityId, Date fromTimeStamp) {
         //检查缓存，看看header节点中的API调用频率限制
         Cache cache = getCache();
         String cacheKey = ConfigData.OTA_HotelCacheChange_Request;
@@ -1185,36 +1147,16 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         HotelRequestBody request = new HotelRequestBody();
         request.createHotelCacheChangeRequest();
 
-        Date timestamp1 = DateUtil.getCurDateTime();
-        timestamp1 = DateUtil.addMinutes(timestamp1, -intervalCacheChange);
-        timestamp1 = DateUtil.getDateOnTheHour(timestamp1);
-
-        String cacheFromTimeStamp = DateUtil.formatDate(timestamp1, "yyyy-MM-dd'T'HH:mm:ss");
+        String cacheFromTimeStamp = DateUtil.formatDate(fromTimeStamp, "yyyy-MM-dd'T'HH:mm:ss");
         request.getHotelCacheChangeRequest().getCacheSearchCriteria().setCacheFromTimestamp(cacheFromTimeStamp);
         request.getHotelCacheChangeRequest().getCacheSearchCriteria().getCacheSearchCriterion().setHotelCityCode(cityId);
 
-        String xml = "";
+        logger.info("OTA_HotelCacheChange: " + cacheFromTimeStamp + ", " + cityId);
+
+        String xml;
 
         try {
-            JAXBContext jc = JAXBContext.newInstance(HotelRequestBody.class);
-
-            Marshaller m = jc.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            m.setProperty(Marshaller.JAXB_ENCODING, "utf-8");
-            m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
-
-            DocumentResult documentResult = new DocumentResult();
-            m.marshal(request, documentResult);
-
-            org.dom4j.Document document = documentResult.getDocument();
-            org.dom4j.Element requestElement = document.getRootElement();
-
-            org.dom4j.Document doc1 = DocumentHelper.createDocument();
-
-            org.dom4j.Element rootElement = createRequestHeaderElement(doc1, ConfigData.OTA_HotelCacheChange_Request);
-            rootElement.add(requestElement);
-
-            xml = doc1.asXML();
+            xml = createXml4HotelRequestBody(request, ConfigData.OTA_HotelCacheChange_Request);
         } catch (JAXBException e) {
             e.printStackTrace();
             return "<xml>" + e.getMessage() + "</xml>";
@@ -1231,21 +1173,16 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
     }
 
     @Override
-    public String searchHotelCacheChange() {
-        return searchHotelCacheChange(2);
-    }
-
-    @Override
     public String importHotelCacheChangeResponse(String filename) {
-        String rs = "HAHA";
+        String rs;
         SAXReader reader = new SAXReader();
 
         logger.info("filename: " + filename);
 
         File file = new File(filename);
-        if (file.exists() == false) return null;
+        if (!file.exists()) return null;
 
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(file);
         } catch (DocumentException e) {
@@ -1353,15 +1290,17 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         public void run() {
             runThread = Thread.currentThread();
             stopRequested = false;
+            logger.info(runThread.getName() + "(RatePlanDaoThread) is running...");
 
-            while ( !stopRequested || !ratePlanQueue.isEmpty() ) {
+            while ( !stopRequested || !ratePlanQueue.isEmpty() || !ratePlanRequestQueue.isEmpty() ) {
+
 
                 try {
                     DocumentDto documentDto = ratePlanQueue.take();
                     Document document = documentDto.getDocument();
                     int periodId = documentDto.getPeriodId();
 
-                    logger.info(runThread.getName() + " run on " + periodId);
+                    logger.info(runThread.getName() + " is running on " + periodId);
 
                     executeSaveRatePlanDocument(document, periodId);
                 } catch (InterruptedException e) {
@@ -1375,14 +1314,11 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 }
             }
 
-            logger.info(runThread.getName() + " exit.");
+            logger.info(runThread.getName() + "(RatePlanDaoThread) exit.");
         }
 
         public void stopRequest() {
             stopRequested = true;
-//            if ( runThread != null ) {
-//                runThread.interrupt();
-//            }
         }
     }
     private class HotelCacheChangeDaoThread implements Runnable {
@@ -1395,16 +1331,79 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             runThread = Thread.currentThread();
             stopRequested = false;
 
+            logger.info(runThread.getName() + "(HotelCacheChangeDaoThread) is running...");
+
             while ( !stopRequested || !hotelCacheChangeQueue.isEmpty() ) {
 
                 try {
                     DocumentDto documentDto = hotelCacheChangeQueue.take();
                     Document document = documentDto.getDocument();
-                    int periodId = documentDto.getPeriodId();
-
-                    logger.info(runThread.getName() + " run...");
 
                     executeSaveHotelCacheChangeDocument(document);
+
+                    Thread.sleep(50);
+                } catch ( InterruptedException x ) {
+                    Thread.currentThread().interrupt(); // re-assert interrupt
+                }
+            }
+
+            logger.info(runThread.getName() + "(HotelCacheChangeDaoThread) exit.");
+        }
+
+        public void stopRequest() {
+            stopRequested = true;
+        }
+    }
+
+    /**
+     * 获取hotelCacheChange的详细信息
+     */
+    private class HotelCacheChangeDetailThread implements Runnable {
+
+        private volatile boolean stopRequested;
+        private Thread runThread;
+
+        @Override
+        public void run() {
+            runThread = Thread.currentThread();
+            stopRequested = false;
+
+            logger.info(runThread.getName() + "(HotelCacheChangeDetailThread) is running...");
+
+            //获取hotelCacheChange的原始数据
+            List<HotelRatePlanRequestDto> requestDtos = new ArrayList<HotelRatePlanRequestDto>();
+
+            SAXReader reader = new SAXReader();
+            Document document;// 读取XML文件
+            while ( !stopRequested || !ratePlanRequestQueue.isEmpty() ) {
+                try {
+                    if (ratePlanRequestQueue.size() == 0) Thread.sleep(1000);
+                    int count = ratePlanRequestQueue.drainTo(requestDtos, 10);
+
+                    logger.debug(runThread.getName() + " is running...");
+                    if (count > 0 ) {
+                        String response = execSearchHotelRatePlan(requestDtos);
+
+                        try {
+                            document = reader.read(new StringReader(response));
+                            if (document != null) {
+
+                                Element rootElement = document.getRootElement();
+                                Element headerElement = rootElement.element("Header");
+                                if (!headerElement.attribute("ResultCode").getValue().equalsIgnoreCase("Success")) {
+                                    logger.error("ER#ResultCode is not Success.");
+                                    logger.error(document.asXML());
+                                }
+
+                                processHotelRatePlanResponse(document, 0);
+                            }
+                        } catch (DocumentException e) {
+                            logger.error(e.getMessage());
+                       }
+                    } else {
+                        logger.info("drainTo is 0");
+                    }
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -1416,16 +1415,13 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
                 }
             }
 
-            logger.info(runThread.getName() + " exit.");
+            logger.info(runThread.getName() + "(HotelCacheChangeDetailThread) exit.");
         }
 
 
 
         public void stopRequest() {
             stopRequested = true;
-//            if ( runThread != null ) {
-//                runThread.interrupt();
-//            }
         }
     }
 
@@ -1438,23 +1434,22 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         xpath.setNamespaceURIs(uris);
         List myNodes = xpath.selectNodes(document);
 
-        String rs = "NA";
 
-        int saveCount = 0;
+        List<CacheHotelCacheChange> hotelCacheChanges = new ArrayList<CacheHotelCacheChange>();
+
+        XStream xs = new XStream();
+        xs.alias("CacheChangeInfo", HotelCacheChangeInfo.class);
+        xs.processAnnotations(HotelCacheChangeInfo.class);
+
         for (Iterator it = myNodes.iterator(); it.hasNext(); ) {
             Element element = (Element) it.next();
 
-            if (element.getName().equalsIgnoreCase("CacheChangeInfo") == false) {
+            if (!element.getName().equalsIgnoreCase("CacheChangeInfo")) {
                 continue;
             }
 
-
-            XStream xs = new XStream();
-            xs.alias("CacheChangeInfo", HotelCacheChangeInfo.class);
-            xs.processAnnotations(HotelCacheChangeInfo.class);
-
-            String xml = element.asXML();
-            HotelCacheChangeInfo hotelCacheChangeInfo = (HotelCacheChangeInfo) xs.fromXML(xml);
+            //String xml = element.asXML();
+            HotelCacheChangeInfo hotelCacheChangeInfo = (HotelCacheChangeInfo) xs.fromXML(element.asXML());
 
             CacheHotelCacheChange cacheHotelCacheChange = new CacheHotelCacheChange();
             cacheHotelCacheChange.setHotelCode(hotelCacheChangeInfo.getHotelCode());
@@ -1462,29 +1457,15 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
             try {
                 cacheHotelCacheChange.setStartDate(DateUtil.convertToDate(hotelCacheChangeInfo.getDateRange().getStartDate()));
                 cacheHotelCacheChange.setEndDate(DateUtil.convertToDate(hotelCacheChangeInfo.getDateRange().getEndDate()));
-            } catch (ParseException e) {
-                e.printStackTrace();
+            } catch (Exception ex) {
+                logger.error(ex.getMessage());
+                continue;
             }
 
+            hotelCacheChanges.add(cacheHotelCacheChange);
 
-            Date basetime = DateUtil.getCurDateTime();
-            int retCode;
-            synchronized (this) {
-                retCode = hotelDao.createCacheHotelCacheChange(cacheHotelCacheChange);
-            }
-            if (retCode != 1) {
-                logger.error("ER#" + cacheHotelCacheChange.getHotelCode() + "," + cacheHotelCacheChange.getRatePlanCode());
-                return;
-            } else {
-                saveCount++;
-            }
-
-            int spantime = DateUtil.getPastTime(basetime);
-            if (spantime > 20000) {
-                logger.info("processHotelCacheChangeResponse\'s time is " + spantime + " ms, clean EntityManager.");
-                hotelDao.clearAllCache();
-            }
         }//end for
+        hotelDao.createCacheHotelCacheChanges(hotelCacheChanges);
     }
 
     @Override
@@ -1494,14 +1475,17 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
         RatePlanDaoThread ratePlanDaoThread1 = new RatePlanDaoThread();
         Thread t = new Thread(ratePlanDaoThread1);
+        t.setDaemon(true);
         t.start();
 
         RatePlanDaoThread ratePlanDaoThread2 = new RatePlanDaoThread();
         t = new Thread(ratePlanDaoThread2);
+        t.setDaemon(true);
         t.start();
 
         RatePlanDaoThread ratePlanDaoThread3 = new RatePlanDaoThread();
         t = new Thread(ratePlanDaoThread3);
+        t.setDaemon(true);
         t.start();
 
         cn.buk.hotel.entity.HotelInfo hotelInfo;
@@ -1524,6 +1508,7 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
                 hotelInfo = hotelDao.getHotelInfoByHotelCode(hotelCode);
                 if (hotelInfo == null || hotelInfo.getRatePlanStatus() == -1) {
+                    logger.debug(hotelCode + " is null or rate plan status is -1.");
                     continue;
                 }
 
@@ -1571,28 +1556,37 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
 
         HotelCacheChangeDaoThread hotelCacheChangeDaoThread1 = new HotelCacheChangeDaoThread();
         Thread t = new Thread(hotelCacheChangeDaoThread1);
+        t.setDaemon(true);
         t.start();
 
         HotelCacheChangeDaoThread hotelCacheChangeDaoThread2 = new HotelCacheChangeDaoThread();
         t = new Thread(hotelCacheChangeDaoThread2);
+        t.setDaemon(true);
         t.start();
 
         HotelCacheChangeDaoThread hotelCacheChangeDaoThread3 = new HotelCacheChangeDaoThread();
         t = new Thread(hotelCacheChangeDaoThread3);
+        t.setDaemon(true);
         t.start();
 
 
-        List<City> cities = cityDao.getAllCity();
+        List<City> cities = cityDao.getCityHotelGreaterThan100();
         int max = cities.size();
         int index = 0;
+
+        Date timestamp1 = DateUtil.getCurDateTime();
+        timestamp1 = DateUtil.addMinutes(timestamp1, -intervalCacheChange);
+        timestamp1 = DateUtil.getDateOnMinute(timestamp1);
+        String cacheFromTimeStamp = DateUtil.formatDate(timestamp1, "yyyy-MM-dd'T'HH:mm:ss");
         for(City city: cities) {
             if (city.getOpenApiId() == 0) continue;
-            if (city.getCountryCode().equalsIgnoreCase("CN")==false) continue;
+            if (!city.getCountryCode().equalsIgnoreCase("CN")) continue;
 
             index++;
-            logger.info("refreshHotelCacheChange\'s process: " + index + "/" + max);
+            logger.debug("refreshHotelCacheChange\'s process: " + index + "/" + max);
+            logger.info("OTA_HotelCacheChange: " + cacheFromTimeStamp + ", " + city.getOpenApiId() + ", " + index);
 
-            String xml = searchHotelCacheChange(city.getOpenApiId());
+            String xml = searchHotelCacheChange(city.getOpenApiId(),timestamp1);
             if (xml.length() == 0) break;
             processHotelCacheChange(xml);
         }
@@ -1614,17 +1608,150 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         }
     }
 
+    private class HotelRatePlanRequestDto {
+        private String hotelCode;
+        private Date startDate;
+        private Date endDate;
+
+        public String getHotelCode() {
+            return hotelCode;
+        }
+
+        public void setHotelCode(String hotelCode) {
+            this.hotelCode = hotelCode;
+        }
+
+        public Date getStartDate() {
+            return startDate;
+        }
+
+        public void setStartDate(Date startDate) {
+            this.startDate = startDate;
+        }
+
+        public Date getEndDate() {
+            return endDate;
+        }
+
+        public void setEndDate(Date endDate) {
+            this.endDate = endDate;
+        }
+    }
+
     @Override
-    public void deleteExpiredRate() {
-        hotelDao.deleteExpiredRate();
+    public void retrieveHotelCacheChangeDetail() {
+        HotelCacheChangeDetailThread cacheDetailThread1 = new HotelCacheChangeDetailThread();
+        Thread t = new Thread(cacheDetailThread1);
+        t.setDaemon(true);
+        t.start();
+
+        HotelCacheChangeDetailThread cacheDetailThread2 = new HotelCacheChangeDetailThread();
+        t = new Thread(cacheDetailThread2);
+        t.setDaemon(true);
+        t.start();
+
+        HotelCacheChangeDetailThread cacheDetailThread3 = new HotelCacheChangeDetailThread();
+        t = new Thread(cacheDetailThread3);
+        t.setDaemon(true);
+        t.start();
+
+        RatePlanDaoThread ratePlanDaoThread1 = new RatePlanDaoThread();
+        t = new Thread(ratePlanDaoThread1);
+        t.setDaemon(true);
+        t.start();
+
+        RatePlanDaoThread ratePlanDaoThread2 = new RatePlanDaoThread();
+        t = new Thread(ratePlanDaoThread2);
+        t.setDaemon(true);
+        t.start();
+
+        RatePlanDaoThread ratePlanDaoThread3 = new RatePlanDaoThread();
+        t = new Thread(ratePlanDaoThread3);
+        t.setDaemon(true);
+        t.start();
+
+
+        String hotelCode0 = null;
+        Date startDate0 = null, endDate0 = null;
+        List<CacheHotelCacheChange> cacheChanges = hotelDao.getHotelCacheChanges();
+
+        for(CacheHotelCacheChange cacheHotelCacheChange: cacheChanges) {
+            String hotelCode = cacheHotelCacheChange.getHotelCode();
+            Date startDate = cacheHotelCacheChange.getStartDate();
+            Date endDate = cacheHotelCacheChange.getEndDate();
+
+            int spans = DateUtil.getPastDays(startDate, DateUtil.getCurDate());
+            if (spans > 90) {
+                logger.warn("HotelCacheChange\'s start date is " + DateUtil.formatDate(startDate, "yyyy-MM-dd") + ", " + Integer.toString(spans) + " > 90 days, ignored.");
+                continue;
+            }
+            spans = DateUtil.getPastDays(endDate, DateUtil.getCurDate());
+            if (spans > 90) {
+                logger.warn("HotelCacheChange\'s end date is " + DateUtil.formatDate(endDate, "yyyy-MM-dd") + ", " + Integer.toString(spans) + " > 90 days, start date is " + DateUtil.formatDate(startDate, "yyyy-MM-dd") + ", ignored.");
+                continue;
+            }
+
+            if (hotelCode0 == null) {
+                hotelCode0 = hotelCode;
+                startDate0 = startDate;
+                endDate0 = endDate;
+
+                continue;
+            }
+
+            if (hotelCode0.equalsIgnoreCase(hotelCode) && startDate0.getTime() == startDate.getTime() && endDate0.getTime() == endDate.getTime()) continue;
+
+            HotelRatePlanRequestDto dto = new HotelRatePlanRequestDto();
+            dto.setHotelCode(hotelCode0);
+            dto.setStartDate(startDate0);
+            dto.setEndDate(endDate0);
+            try {
+                logger.debug("current ratePlanRequestQueue\'s size is " + ratePlanRequestQueue.size());
+                ratePlanRequestQueue.put(dto);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            hotelCode0 = hotelCode;
+            startDate0 = startDate;
+            endDate0 = endDate;
+
+
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (hotelCode0 != null) {
+            HotelRatePlanRequestDto dto = new HotelRatePlanRequestDto();
+            dto.setHotelCode(hotelCode0);
+            dto.setStartDate(startDate0);
+            dto.setEndDate(endDate0);
+            try {
+                logger.debug("current request dot queue\'s size is " + ratePlanRequestQueue.size());
+                ratePlanRequestQueue.put(dto);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        cacheDetailThread1.stopRequest();
+        cacheDetailThread2.stopRequest();
+        cacheDetailThread3.stopRequest();
+
+        ratePlanDaoThread1.stopRequest();
+        ratePlanDaoThread2.stopRequest();
+        ratePlanDaoThread3.stopRequest();
     }
 
     private String processHotelCacheChange(String xml) {
-        String retval = "NA";
+        String retval;
         //处理结果
         SAXReader reader = new SAXReader();
 
-        Document document = null;// 读取XML文件
+        Document document;// 读取XML文件
         try {
             document = reader.read(new StringReader(xml));
             retval = processHotelCacheChangeResponse(document);
@@ -1641,25 +1768,31 @@ public class CtripOpenApiServiceImpl implements CtripOpenApiService {
         this.cityDao = cityDao;
     }
 
-    public HotelDao getHotelDao() {
-        return hotelDao;
-    }
+// --Commented out by Inspection START (2014-12-8 22:39):
+//    public HotelDao getHotelDao() {
+//        return hotelDao;
+//    }
+// --Commented out by Inspection STOP (2014-12-8 22:39)
 
     public void setHotelDao(HotelDao hotelDao) {
         this.hotelDao = hotelDao;
     }
 
-    public int getIntervalCacheChange() {
-        return intervalCacheChange;
-    }
+// --Commented out by Inspection START (2014-12-8 22:39):
+//    public int getIntervalCacheChange() {
+//        return intervalCacheChange;
+//    }
+// --Commented out by Inspection STOP (2014-12-8 22:39)
 
     public void setIntervalCacheChange(int intervalCacheChange) {
         this.intervalCacheChange = intervalCacheChange;
     }
 
-    public String getAllianceId() {
-        return allianceId;
-    }
+// --Commented out by Inspection START (2014-12-8 22:39):
+//    public String getAllianceId() {
+//        return allianceId;
+//    }
+// --Commented out by Inspection STOP (2014-12-8 22:39)
 
     public void setAllianceId(String allianceId) {
         this.allianceId = allianceId;

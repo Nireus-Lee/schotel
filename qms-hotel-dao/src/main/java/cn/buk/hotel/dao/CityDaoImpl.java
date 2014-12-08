@@ -69,4 +69,17 @@ public class CityDaoImpl extends AbstractDao implements CityDao {
         }
         return cities;
     }
+
+    @Override
+    public List<City> getCityHotelGreaterThan100() {
+        List<City> cities = null;
+        try {
+            //select o from City o where o.openApiId in (select h.cityId from HotelInfo h group by h.cityId having count(h) > 100)
+            cities = getEm().createQuery("select o from City o where o.openApiId in (select h.cityId from HotelInfo h group by h.cityId having count(h) > 100)")
+                    .getResultList();
+        } catch (PersistenceException e) {
+            logger.error(e.getMessage());
+        }
+        return cities;
+    }
 }

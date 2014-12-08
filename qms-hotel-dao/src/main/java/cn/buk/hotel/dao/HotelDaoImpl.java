@@ -50,9 +50,12 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
         HotelInfo hotelInfo = null;
 
         try {
-            hotelInfo = (HotelInfo) getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
+            logger.debug("Get hotel info for [" + hotelCode + "]");
+
+            Object obj  = getEm().createQuery("select o from HotelInfo o where o.hotelCode = :hotelCode")
                     .setParameter("hotelCode", hotelCode)
                     .getSingleResult();
+            if (obj != null)  hotelInfo = (HotelInfo) obj;
         } catch (Exception ex) {
             logger.error(hotelCode + " cannot be found in entity hotelInfo.");
             ex.printStackTrace();
@@ -193,11 +196,12 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
                     for(HotelRatePlanRate rate: hotelRatePlan.getHotelRatePlanRates()) {
                         if (rate0.getStartDate().getTime() == rate.getStartDate().getTime()) {
                             em.remove(rate0);
+                            em.flush();
                             break;
                         }
                     }
                 }
-                em.flush();
+
                 for(HotelRatePlanRate rate: hotelRatePlan.getHotelRatePlanRates()) {
                     rate.setHotelRatePlan(plan0);
                     em.persist(rate);
@@ -308,10 +312,13 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     public CacheRatePlan getCacheRatePlan(String hotelCode, int periodId) {
-        CacheRatePlan cacheRatePlan = (CacheRatePlan) getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
-                .setParameter("hotelCode", hotelCode)
-                .setParameter("periodId", periodId)
-                .getSingleResult();
+        CacheRatePlan cacheRatePlan = null;
+
+        List<CacheRatePlan> cacheRatePlans =  getEm().createQuery("select o from CacheRatePlan o where o.hotelCode = :hotelCode and o.periodId = :periodId")
+                    .setParameter("hotelCode", hotelCode)
+                    .setParameter("periodId", periodId)
+                    .getResultList();
+        if (cacheRatePlans.size() > 0) cacheRatePlan = cacheRatePlans.get(0);
 
         return cacheRatePlan;
     }
@@ -475,11 +482,6 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     }
 
     @Override
-    public void clearAllCache() {
-        getEm().clear();
-    }
-
-    @Override
     @Transactional
     public int createDistrict(District district) {
         int retCode = 0;
@@ -558,6 +560,17 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
     }
 
     @Override
+    @Transactional
+    public int createCacheHotelCacheChanges(List<CacheHotelCacheChange> hotelCacheChanges) {
+        if (hotelCacheChanges == null || hotelCacheChanges.size() == 0) return 0;
+
+        for(CacheHotelCacheChange hotelCacheChange: hotelCacheChanges)
+            getEm().persist(hotelCacheChange);
+
+        return 1;
+    }
+
+    @Override
     public List<String> getAllHotelCodes2() {
         List<String> hotelCodes = new ArrayList<String>();
 
@@ -604,19 +617,6 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
 
     @Override
     @Transactional
-    public void deleteExpiredRate() {
-        Date date = DateUtil.getCurDate();
-        date = DateUtil.add(date, -1);
-
-        int count = getEm().createQuery("delete from HotelRatePlanRate r where r.endDate <= :endDate")
-                .setParameter("endDate", date)
-                .executeUpdate();
-
-        logger.info("deleted " + count + " expired rates.");
-    }
-
-    @Override
-    @Transactional
     public int setCacheRatePlanDone(String hotelCode, int periodId) {
         int retCode = 0;
 
@@ -628,5 +628,19 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
                 .executeUpdate();
 
         return retCode;
+    }
+
+    @Override
+    @Transactional
+    public List<CacheHotelCacheChange> getHotelCacheChanges() {
+        Date date = DateUtil.add(DateUtil.getCurDate(), 90);
+        List<CacheHotelCacheChange> list = getEm().createQuery("select o from CacheHotelCacheChange o where o.endDate <= :endDate order by o.hotelCode, o.startDate")
+                .setParameter("endDate", date)
+                .getResultList();
+
+        int count = getEm().createQuery("delete from CacheHotelCacheChange").executeUpdate();
+        logger.info("deleted hotelCacheChange\'s size is " + count);
+
+        return list;
     }
 }

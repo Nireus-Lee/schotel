@@ -51,10 +51,12 @@
                 <proxy.host>172.168.1.21</proxy.host>
                 <proxy.port>3128</proxy.port>
 
-                <task.hotel.info.cron>0 0 5 * * ?</task.hotel.info.cron>
-                <task.cron.expression>0 0,10,20,30,40,50 * * * ?</task.cron.expression>
-                <task.cache.change.cron>0 5,15,25,35,45,55 * * * ?</task.cache.change.cron>
-                <task.delete.expired.rate.cron>0 0 5 * * ?</task.delete.expired.rate.cron>
+                <hotel.cache.change.frequence>15</hotel.cache.change.frequence>
+
+                <task.hotel.info.cron>0 0 0 * * ?</task.hotel.info.cron>
+                <task.cron.expression>0 0 0 * * ?</task.cron.expression>
+                <task.cache.change.cron>0 35 11 * * ?</task.cache.change.cron>
+                <task.delete.expired.rate.cron>0 0 0 * * ?</task.delete.expired.rate.cron>
             </properties>
 
         </profile>
@@ -78,6 +80,8 @@
                 <proxy.used>1</proxy.used>
                 <proxy.host>172.17.14.145</proxy.host>
                 <proxy.port>3128</proxy.port>
+				
+				<hotel.cache.change.frequence>15</hotel.cache.change.frequence>
 
                 <task.hotel.info.cron>0 0 0/2 * * ?</task.hotel.info.cron>
                 <task.cron.expression>0 0 1 * * ?</task.cron.expression>

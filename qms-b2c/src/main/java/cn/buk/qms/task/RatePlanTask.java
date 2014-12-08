@@ -5,7 +5,10 @@
 package cn.buk.qms.task;
 
 import cn.buk.api.service.CtripOpenApiService;
+import cn.buk.util.DateUtil;
 import org.apache.log4j.Logger;
+
+import java.util.Date;
 
 /**
  * User: yfdai
@@ -18,22 +21,40 @@ public class RatePlanTask {
     private Logger logger = Logger.getLogger(RatePlanTask.class);
 
     public void refreshRatePlan() {
-        logger.info("[refreshRatePlan] begin");
+        logger.debug("[refreshRatePlan] begin");
+        Date baseTime = DateUtil.getCurDateTime();
+
         ctripOpenApiService.refreshAllRatePlan();
-        logger.info("[refreshRatePlan] end.");
+
+        int total = DateUtil.getPastTime(baseTime);
+        logger.info("task [refresh rate plan] totally elapsed: " + total + " ms.");
+        logger.debug("[refreshRatePlan] end.");
     }
 
     public void refreshHotelCacheChange() {
-        logger.info("[refreshHotelCacheChange] begin");
+        logger.debug("[refreshHotelCacheChange] begin");
+        Date baseTime = DateUtil.getCurDateTime();
+
         ctripOpenApiService.refreshHotelCacheChange();
-        logger.info("[refreshHotelCacheChange] end.");
+
+        int total = DateUtil.getPastTime(baseTime);
+        logger.info("task [refresh hotel cache change] totally elapsed: " + total + " ms.");
+        logger.debug("[refreshHotelCacheChange] end.");
+
+        //TODO: 触发线程去更新响应的rateplan
+        ctripOpenApiService.retrieveHotelCacheChangeDetail();
     }
 
     public void refreshHotelInfo() {
-        logger.info("[refreshHotelInfo] begin");
+        logger.debug("[refreshHotelInfo] begin");
+        Date baseTime = DateUtil.getCurDateTime();
+
         ctripOpenApiService.refreshAllHotelBasicInfo();
         ctripOpenApiService.refreshAllHotelDetail();
-        logger.info("[refreshHotelInfo] end.");
+
+        int total = DateUtil.getPastTime(baseTime);
+        logger.info("task [refresh hotel info] totally elapsed: " + total + " ms.");
+        logger.debug("[refreshHotelInfo] end.");
     }
 
     public CtripOpenApiService getCtripOpenApiService() {
@@ -44,9 +65,4 @@ public class RatePlanTask {
         this.ctripOpenApiService = ctripOpenApiService;
     }
 
-    public void deleteExpiredRate() {
-        logger.info("[deleteExpiredRate] begin");
-        ctripOpenApiService.deleteExpiredRate();
-        logger.info("[deleteExpiredRate] end.");
-    }
 }

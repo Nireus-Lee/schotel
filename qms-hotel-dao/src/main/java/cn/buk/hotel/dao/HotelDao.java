@@ -66,8 +66,6 @@ public interface HotelDao {
 
     public HotelGuestRoom getHotelRoomInfo(int hotelId, String roomTypeCode);
 
-    public void clearAllCache();
-
     public int createDistrict(District district);
 
     public int createZone(Zone zone);
@@ -77,11 +75,11 @@ public interface HotelDao {
     public List<Zone> getZoneByCityId(int cityId);
 
     public int createCacheHotelCacheChange(CacheHotelCacheChange cacheHotelCacheChange);
-
-
-
-    public void deleteExpiredRate();
+    public int createCacheHotelCacheChanges(List<CacheHotelCacheChange> hotelCacheChanges);
 
 
     public int setCacheRatePlanDone(String hotelCode, int periodId);
+
+
+    public List<CacheHotelCacheChange> getHotelCacheChanges();
 }

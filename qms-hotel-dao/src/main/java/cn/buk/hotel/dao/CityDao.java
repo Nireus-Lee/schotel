@@ -22,4 +22,6 @@ public interface CityDao {
     public City getCityByCode(String cityCode);
 
     public List<City> getAllCity();
+
+    public List<City> getCityHotelGreaterThan100();
 }
