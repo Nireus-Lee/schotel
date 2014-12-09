@@ -448,7 +448,7 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
                     .getResultList();
             for(HotelRatePlan rp: ratePlans) {
                 List<HotelRatePlanRate> rates = getEm().createQuery("select o from HotelRatePlanRate o where o.startDate >= :startDate " +
-                        " and o.endDate <= :endDate " +
+                        " and o.startDate < :endDate " +
                         " and o.hotelRatePlan.id = :id")
                         .setParameter("id", rp.getId())
                         .setParameter("startDate", checkInDate)

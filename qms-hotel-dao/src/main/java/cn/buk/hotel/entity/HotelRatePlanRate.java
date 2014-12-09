@@ -30,6 +30,10 @@ public class HotelRatePlanRate {
     @Temporal(TemporalType.DATE)
     private Date startDate;
 
+    /**
+     * 不再使用该属性
+     */
+    @Deprecated
     @Temporal(TemporalType.DATE)
     private Date endDate;
 
