@@ -13,6 +13,8 @@ public class HotelSearchCriteria {
 
     private int cityId;
 
+    private String hotelName;
+
     private Page page;
 
     private String star;
@@ -59,5 +61,13 @@ public class HotelSearchCriteria {
 
     public void setCityId(int cityId) {
         this.cityId = cityId;
+    }
+
+    public String getHotelName() {
+        return hotelName;
+    }
+
+    public void setHotelName(String hotelName) {
+        this.hotelName = hotelName;
     }
 }

@@ -30,6 +30,7 @@ public class HotelAction extends ActionSupport {
     private String cityName;
     private String checkInDate;
     private String checkOutDate;
+    private String hotelName;
     /**
      * 按照酒店星级过滤
      */
@@ -53,7 +54,7 @@ public class HotelAction extends ActionSupport {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        hotelSearchResult = hotelService.searchHotel(cityCode, inDate, outDate, pageNo, star, districtId, zoneId);
+        hotelSearchResult = hotelService.searchHotel(cityCode, inDate, outDate, hotelName, pageNo, star, districtId, zoneId);
         return SUCCESS;
     }
 
@@ -163,5 +164,13 @@ public class HotelAction extends ActionSupport {
 
     public void setZoneId(int zoneId) {
         this.zoneId = zoneId;
+    }
+
+    public String getHotelName() {
+        return hotelName;
+    }
+
+    public void setHotelName(String hotelName) {
+        this.hotelName = hotelName;
     }
 }

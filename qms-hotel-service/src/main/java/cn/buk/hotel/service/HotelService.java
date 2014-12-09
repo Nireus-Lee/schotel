@@ -20,7 +20,7 @@ public interface HotelService {
 
     public int createHotelInfo(HotelInfo hotelInfo);
 
-    public HotelSearchResult searchHotel(String cityCode, Date checkInDate, Date checkOutDate, int pageNo, String star, int districtId, int zoneId);
+    public HotelSearchResult searchHotel(String cityCode, Date checkInDate, Date checkOutDate, String hotelName, int pageNo, String star, int districtId, int zoneId);
 
     public List<LocationDto> getLocations(String cityCode, String locationType);
 }

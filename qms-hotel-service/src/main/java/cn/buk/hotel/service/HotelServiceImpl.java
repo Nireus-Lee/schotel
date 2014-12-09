@@ -39,7 +39,7 @@ public class HotelServiceImpl implements HotelService {
     }
 
     @Override
-    public HotelSearchResult searchHotel(String cityCode, Date checkInDate, Date checkOutDate,int pageNo, String star, int districtId, int zoneId) {
+    public HotelSearchResult searchHotel(String cityCode, Date checkInDate, Date checkOutDate, String hotelName, int pageNo, String star, int districtId, int zoneId) {
         HotelSearchResult searchResult = new HotelSearchResult();
         Page page = new Page();
         page.setPageNo(pageNo);
@@ -52,6 +52,7 @@ public class HotelServiceImpl implements HotelService {
         List<HotelInfoDto> dtos = new ArrayList<HotelInfoDto>();
         HotelSearchCriteria sc = new HotelSearchCriteria();
         sc.setCityId(cityId );
+        sc.setHotelName(hotelName);
         sc.setPage(page);
         sc.setStar(star);
         sc.setDistrictId(districtId);

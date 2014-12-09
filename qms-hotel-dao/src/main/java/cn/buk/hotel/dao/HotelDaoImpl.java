@@ -378,6 +378,11 @@ public class HotelDaoImpl extends AbstractDao implements HotelDao {
                     predicates.add(predicate);
                 }
 
+                if (sc.getHotelName() != null && sc.getHotelName().trim().length() > 0) {
+                    predicate = cb.like(root.get(HotelInfo_.hotelName), "%" + sc.getHotelName() + "%");
+                    predicates.add(predicate);
+                }
+
                 if (sc.getStar() != null && sc.getStar().length() > 0) {
                     Join<HotelInfo, HotelAward> hotelAward = root.join("hotelAwards", JoinType.LEFT);
                     hotelAward.alias("ha");
